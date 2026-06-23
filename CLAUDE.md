@@ -78,4 +78,4 @@ This project follows Spec Driven Design practices. When implementing features:
 
 ## Skills
 
-- **Usa siempre `/frontend-design` cuando requieras hacer diseños HTML.** Proporciona orientación para crear diseños visuales distintivos e intencionales, ayuda con tipografía y decisiones estéticas.
+- **Always use `/frontend-design` when creating HTML designs.** Provides guidance for distinctive, intentional visual design with attention to typography and aesthetic choices.
