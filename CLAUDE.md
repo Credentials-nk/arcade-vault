@@ -75,3 +75,7 @@ This project follows Spec Driven Design practices. When implementing features:
 - **React 19:** Uses React 19 with the new JSX transform
 - **No testing framework configured:** Add test setup if needed
 - **No environment variables configured:** Add `.env.local` if secrets/configs are needed
+
+## Skills
+
+- **Usa siempre `/frontend-design` cuando requieras hacer diseños HTML.** Proporciona orientación para crear diseños visuales distintivos e intencionales, ayuda con tipografía y decisiones estéticas.
