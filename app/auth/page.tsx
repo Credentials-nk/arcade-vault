@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUser } from "@/hooks/useUser";
 
 export default function AuthPage() {
   const router = useRouter();
+  const { login, signOut } = useUser();
   const [tab, setTab] = useState<"in" | "up">("in");
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
@@ -12,13 +14,12 @@ export default function AuthPage() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const name = (user.trim() || "PLAYER1").toUpperCase().slice(0, 10);
-    localStorage.setItem("av_user", JSON.stringify({ name }));
+    login(user.trim() || "PLAYER1");
     router.push("/");
   };
 
   const asGuest = () => {
-    localStorage.removeItem("av_user");
+    signOut();
     router.push("/");
   };
 
