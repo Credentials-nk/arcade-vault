@@ -88,6 +88,16 @@ This project follows Spec Driven Design practices. When implementing features:
 - **No testing framework configured:** Add test setup if needed
 - **No environment variables configured:** Add `.env.local` if secrets/configs are needed
 
+## Playwright Screenshots
+
+Always save Playwright screenshots to `.playwright-screenshots/` in the project root. Pass the filename with that prefix:
+
+```ts
+filename: ".playwright-screenshots/my-screenshot.png"
+```
+
+Never save screenshots to the project root or any other directory.
+
 ## Skills
 
 - **Always use `/frontend-design` when creating HTML designs.** Provides guidance for distinctive, intentional visual design with attention to typography and aesthetic choices.
