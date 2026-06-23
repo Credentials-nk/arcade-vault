@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Arcade Vault** is an online gaming platform where players compete for points. The project uses Spec Driven Design methodology with `/spec` and `/spec-impl` skills.
 
+## Git Workflow
+
+**IMPORTANT:** `main` is a protected branch. **Never commit directly to main.** All changes must be made in feature branches and merged via Pull Requests on GitHub.
+
+**Workflow:**
+1. Create a feature branch (e.g., `01-styles`, `02-components`)
+2. Make commits in the feature branch
+3. Push the branch to GitHub
+4. Create a Pull Request for review
+5. Merge via PR (this updates main)
+6. Delete the feature branch after merge
+
 ## Critical: Next.js 16.2.9 Breaking Changes
 
 This project uses Next.js 16.2.9, which has breaking changes from previous versions. **Before writing any code:**
