@@ -1,6 +1,6 @@
 # SPEC 03 — Pantalla About con formulario de contacto vía Resend
 
-> **Estado:** Approved · **Depende de:** 02-home-screen · **Fecha:** 2026-06-25
+> **Estado:** Implementado · **Depende de:** 02-home-screen · **Fecha:** 2026-06-25
 > **Objetivo:** Implementar la pantalla About en `/about` siguiendo el template de referencia, con formulario de contacto funcional que envía emails a nikolas090189@gmail.com usando Resend.
 
 ## Scope
