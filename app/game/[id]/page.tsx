@@ -16,7 +16,7 @@ export default function GameDetailPage() {
         <div className="pixel" style={{ fontSize: 14, color: "var(--magenta)", marginBottom: 12 }}>
           JUEGO NO ENCONTRADO
         </div>
-        <Link href="/" className="btn ghost">VOLVER</Link>
+        <Link href="/library" className="btn ghost">VOLVER</Link>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function GameDetailPage() {
             <Link href={`/game/${game.id}/play`} className="btn xl pulse">
               ▶&nbsp; JUGAR AHORA
             </Link>
-            <Link href="/" className="btn ghost lg">
+            <Link href="/library" className="btn ghost lg">
               VOLVER AL VAULT
             </Link>
           </div>

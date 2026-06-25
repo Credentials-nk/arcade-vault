@@ -21,7 +21,7 @@ export default function GamePlayerPage() {
         <div className="pixel" style={{ fontSize: 14, color: "var(--magenta)", marginBottom: 12 }}>
           JUEGO NO ENCONTRADO
         </div>
-        <Link href="/" className="btn ghost">VOLVER</Link>
+        <Link href="/library" className="btn ghost">VOLVER</Link>
       </div>
     );
   }
