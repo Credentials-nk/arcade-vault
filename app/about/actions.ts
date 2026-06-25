@@ -22,7 +22,7 @@ export async function sendContactEmail(payload: ContactPayload): Promise<Contact
   try {
     const { error } = await resend.emails.send({
       from: "onboarding@resend.dev",
-      to: "nikolas090189+arcade@gmail.com",
+      to: "nikolas090189@gmail.com",
       subject: `[Arcade Vault] Mensaje de ${name}`,
       html: `
         <h2>Nuevo mensaje de contacto — Arcade Vault</h2>
