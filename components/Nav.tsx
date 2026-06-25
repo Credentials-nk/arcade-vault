@@ -19,7 +19,8 @@ export default function Nav({ user, onSignOut }: NavProps) {
   const router = useRouter();
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/" || pathname.startsWith("/game");
+    if (href === "/") return pathname === "/";
+    if (href === "/library") return pathname === "/library" || pathname.startsWith("/game");
     return pathname.startsWith(href);
   };
 
@@ -40,10 +41,16 @@ export default function Nav({ user, onSignOut }: NavProps) {
 
         <div className="links">
           <Link href="/" className={isActive("/") ? "active" : ""}>
+            Inicio
+          </Link>
+          <Link href="/library" className={isActive("/library") ? "active" : ""}>
             Biblioteca
           </Link>
           <Link href="/hall" className={isActive("/hall") ? "active" : ""}>
             Salón de la Fama
+          </Link>
+          <Link href="/about" className={isActive("/about") ? "active" : ""}>
+            Acerca de
           </Link>
         </div>
 
@@ -90,6 +97,13 @@ export default function Nav({ user, onSignOut }: NavProps) {
           onClick={() => go("/")}
           style={{ cursor: "pointer" }}
         >
+          Inicio
+        </a>
+        <a
+          className={isActive("/library") ? "active" : ""}
+          onClick={() => go("/library")}
+          style={{ cursor: "pointer" }}
+        >
           Biblioteca
         </a>
         <a
@@ -98,6 +112,13 @@ export default function Nav({ user, onSignOut }: NavProps) {
           style={{ cursor: "pointer" }}
         >
           Salón de la Fama
+        </a>
+        <a
+          className={isActive("/about") ? "active" : ""}
+          onClick={() => go("/about")}
+          style={{ cursor: "pointer" }}
+        >
+          Acerca de
         </a>
         <a
           className={isActive("/auth") ? "active" : ""}
