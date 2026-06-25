@@ -1,6 +1,6 @@
 # SPEC 02 — Pantalla Home (landing page) de Arcade Vault
 
-> **Estado:** Approved · **Depende de:** 01-mvp-screens · **Fecha:** 2026-06-24
+> **Estado:** Implemented · **Depende de:** 01-mvp-screens · **Fecha:** 2026-06-24
 > **Objetivo:** Implementar la pantalla Home en `/` como landing page visual estática, reubicar la Biblioteca a `/library`, y actualizar la Nav para incluir los links "Inicio" y "Acerca de".
 
 ## Scope

@@ -46,3 +46,6 @@ references/
 # playwright
 .playwright-mcp/
 .playwright-screenshots/
+
+# dev logs
+dev-server.log
