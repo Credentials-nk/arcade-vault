@@ -1,6 +1,6 @@
 # SPEC 04 — Integración base de Supabase
 
-> **Estado:** Approved · **Depende de:** 03-about-contact · **Fecha:** 2026-06-28
+> **Estado:** Implementado · **Depende de:** 03-about-contact · **Fecha:** 2026-06-28
 > **Objetivo:** Configurar Supabase en Next.js con clientes browser y server, variables de entorno y middleware de sesión, como fundación para specs futuros de auth, realtime y edge functions.
 
 ## Scope
