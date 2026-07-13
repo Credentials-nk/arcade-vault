@@ -72,6 +72,7 @@ export const GAMES: Game[] = [
     color: 'magenta',
     best: 184220,
     plays: '31.8K',
+    playRoute: '/games/caida',
   },
   {
     id: 'serpentina',
