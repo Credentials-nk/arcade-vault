@@ -18,6 +18,15 @@ export interface ScoreRow {
   date: string;
 }
 
+// Fila normalizada del leaderboard leída desde Supabase (tabla `scores`).
+export interface LeaderboardEntry {
+  rank: number; // calculado en el server tras ordenar (1, 2, 3, …)
+  playerName: string; // scores.player_name
+  score: number; // scores.score
+  date: string; // scores.created_at formateado dd/mm/yyyy
+  gameId: string; // scores.game_id (útil en el ranking global)
+}
+
 export const CATS: string[] = ['TODOS', 'ARCADE', 'PUZZLE', 'SHOOTER', 'VERSUS'];
 
 const PLAYERS: string[] = [
@@ -130,12 +139,6 @@ export interface TickerRow {
   color: 'cyan' | 'magenta' | 'yellow' | 'green';
 }
 
-export interface TopRow {
-  rank: number;
-  player: string;
-  score: number;
-}
-
 export const TICKER_ROWS: TickerRow[] = [
   { player: 'NEONFOX', game: 'Caída', score: 184220, ago: 'hace 2 min', color: 'magenta' },
   { player: 'PX_KAI', game: 'Glotón', score: 96400, ago: 'hace 5 min', color: 'yellow' },
@@ -144,14 +147,6 @@ export const TICKER_ROWS: TickerRow[] = [
   { player: 'GLITCHA', game: 'Bloque Buster', score: 28450, ago: 'hace 18 min', color: 'cyan' },
   { player: 'ARKADYA', game: 'Serpentina', score: 7820, ago: 'hace 24 min', color: 'green' },
   { player: 'CYBER_LU', game: 'Glotón', score: 18900, ago: 'hace 31 min', color: 'yellow' },
-];
-
-export const TOP_TODAY: TopRow[] = [
-  { rank: 1, player: 'NEONFOX', score: 312840 },
-  { rank: 2, player: 'PX_KAI', score: 248110 },
-  { rank: 3, player: 'M00NRYU', score: 196720 },
-  { rank: 4, player: 'VAULT_07', score: 154300 },
-  { rank: 5, player: 'GLITCHA', score: 138900 },
 ];
 
 export function seededScores(seed: number, count = 12): ScoreRow[] {
