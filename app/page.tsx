@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GAMES, TICKER_ROWS, TOP_TODAY, type Game } from '@/lib/data';
+import { GAMES, TICKER_ROWS, type Game, type LeaderboardEntry } from '@/lib/data';
+import { getGlobalLeaderboard } from '@/app/actions/getLeaderboard';
 import { useReveal } from '@/hooks/useReveal';
 
 function FloatingSilhouettes() {
@@ -180,6 +182,13 @@ export default function HomePage() {
   useReveal();
   const router = useRouter();
 
+  const [topPlayers, setTopPlayers] = useState<LeaderboardEntry[]>([]);
+  useEffect(() => {
+    getGlobalLeaderboard(10)
+      .then(setTopPlayers)
+      .catch(() => setTopPlayers([]));
+  }, []);
+
   const features = [
     {
       i: 'GAMEPAD',
@@ -337,21 +346,35 @@ export default function HomePage() {
               </button>
             </div>
             <div className="top-list">
-              {TOP_TODAY.map((r, i) => (
+              {topPlayers.length === 0 ? (
                 <div
-                  key={i}
-                  className={
-                    'top-row' + (i === 0 ? ' top1' : i === 1 ? ' top2' : i === 2 ? ' top3' : '')
-                  }
+                  style={{
+                    padding: '20px 8px',
+                    textAlign: 'center',
+                    color: 'var(--ink-faint)',
+                    fontSize: 12,
+                    letterSpacing: '0.1em',
+                  }}
                 >
-                  <span className="tp-rk">#{String(r.rank).padStart(2, '0')}</span>
-                  <span className="tp-bar">
-                    <span className="tp-fill" style={{ width: 100 - i * 16 + '%' }} />
-                  </span>
-                  <span className="tp-p">{r.player}</span>
-                  <span className="tp-s">{r.score.toLocaleString('es-ES')}</span>
+                  SIN PUNTUACIONES AÚN. ¡SÉ EL PRIMERO EN PUNTUAR!
                 </div>
-              ))}
+              ) : (
+                topPlayers.map((r, i) => (
+                  <div
+                    key={`${r.rank}-${r.playerName}`}
+                    className={
+                      'top-row' + (i === 0 ? ' top1' : i === 1 ? ' top2' : i === 2 ? ' top3' : '')
+                    }
+                  >
+                    <span className="tp-rk">#{String(r.rank).padStart(2, '0')}</span>
+                    <span className="tp-bar">
+                      <span className="tp-fill" style={{ width: 100 - i * 16 + '%' }} />
+                    </span>
+                    <span className="tp-p">{r.playerName}</span>
+                    <span className="tp-s">{r.score.toLocaleString('es-ES')}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
