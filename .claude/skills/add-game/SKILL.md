@@ -43,7 +43,10 @@ estos archivos del repo como **plantilla viva** (léelos antes de preparar el ma
   mayúsculas) y llama a `saveScore`.
 - `app/actions/saveScore.ts` — server action que inserta en la tabla `scores`.
 - `app/actions/getLeaderboard.ts` — lecturas del leaderboard (ya genéricas, ver abajo).
-- `lib/data.ts` — el catálogo `GAMES` donde se registra cada juego.
+- `app/actions/getGames.ts` — `getGames()`/`getGame(id)`, lecturas de la tabla `games` en
+  Supabase (spec 09). El catálogo **ya no vive** en un array hardcodeado: cada juego es una
+  fila en esa tabla. La interfaz `Game` sigue en `lib/data.ts`, pero solo describe la forma de
+  los datos — no los contiene.
 
 ### El leaderboard ya es genérico — no lo rehagas
 
@@ -52,7 +55,7 @@ El spec 06 dejó `getGameLeaderboard(gameId)` y `getGlobalLeaderboard()` funcion
 Por lo tanto, **integrar un juego nuevo NO requiere tocar el leaderboard**. Basta con que:
 
 1. El modal de game over guarde el score con `saveScore('<id-del-juego>', nombre, score)`.
-2. El juego esté registrado en `GAMES` con ese mismo `id`.
+2. El juego esté registrado en la tabla `games` de Supabase con ese mismo `id`.
 
 Con esas dos cosas, el juego aparece solo en el leaderboard por juego y en el global.
 El spec debe **verificar** esto en sus criterios de aceptación, no reimplementarlo.
@@ -99,10 +102,10 @@ inventes: el spec debe omitir ese callback y adaptar el HUD. Documentá la decis
 
 ### Fase 3 — Clarificar los metadatos de plataforma
 
-Antes de delegar en `/spec`, necesitás los datos con los que el juego se registra en `GAMES`
-(mirá la interfaz `Game` y las entradas existentes en `lib/data.ts`). Preguntá al usuario
-**solo lo que no puedas inferir con criterio**, en un único bloque conciso, proponiendo un
-valor por defecto para cada uno:
+Antes de delegar en `/spec`, necesitás los datos con los que el juego se registra en la tabla
+`games` de Supabase (mirá la interfaz `Game` en `lib/data.ts` y consultá las filas existentes
+con `execute_sql` o `list_tables`). Preguntá al usuario **solo lo que no puedas inferir con
+criterio**, en un único bloque conciso, proponiendo un valor por defecto para cada uno:
 
 1. **`id`** (slug de la ruta, p. ej. `tetris`) → define `/games/<id>` y el `game_id` de los scores.
 2. **`title`** (p. ej. `CAÍDA` o `TETRIS`).
@@ -112,7 +115,7 @@ valor por defecto para cada uno:
 6. **`short`** / **`long`** (descripciones; podés redactarlas vos a partir del README y confirmarlas).
 
 Recordá al usuario que el `id` elegido es el que amarra juego ↔ scores ↔ leaderboard: debe
-ser consistente en `GAMES`, en la ruta y en la llamada a `saveScore`.
+ser consistente en la tabla `games`, en la ruta y en la llamada a `saveScore`.
 
 ### Fase 4 — Generar el spec (aplicando el método de `/spec`)
 
@@ -143,8 +146,9 @@ tendría que descubrir preguntando; incorporalas en las secciones correspondient
 - **Depende de:** 04-supabase-setup, 05-asteroids-game, 06-leaderboard (el patrón y el
   leaderboard genérico ya existen).
 - **Scope · In:** engine TS con callbacks; componente `<...Game>`; página `/games/<id>` con
-  HUD + pausa + modal game over con captura de nombre y `saveScore('<id>', ...)`; registro en
-  `GAMES`; copia de assets a `public/` si aplica.
+  HUD + pausa + modal game over con captura de nombre y `saveScore('<id>', ...)`; una fila
+  nueva en la tabla `games` de Supabase (vía migración, con `play_route`); copia de assets a
+  `public/` si aplica.
 - **Scope · Fuera:** modificar el leaderboard (ya es genérico); auth; realtime; cualquier
   juego adicional. Sé explícito.
 - **Modelo de datos:** normalmente **no** introduce datos nuevos — reutiliza la tabla `scores`
@@ -158,7 +162,9 @@ tendría que descubrir preguntando; incorporalas en las secciones correspondient
   3. Crear `components/games/<id>/<Nombre>Game.tsx` (montar canvas, crear/destruir engine).
   4. Crear `app/games/<id>/page.tsx` con HUD, pausa y modal game over (input nombre máx 10,
      mayúsculas, `saveScore('<id>', nombre || 'INVITADO', finalScore)`).
-  5. Registrar el juego en `GAMES` (`lib/data.ts`) con `playRoute: '/games/<id>'`.
+  5. Insertar una fila para el juego en la tabla `games` de Supabase vía migración (o
+     actualizar la existente si ya está en el catálogo sin `play_route`), con
+     `play_route = '/games/<id>'` y el siguiente `sort_order` disponible.
   6. `npm run build`; corregir TS/ESLint.
 - **Criterios de aceptación** (booleanos y verificables), incluyendo obligatoriamente:
   - El juego carga en `/games/<id>` y es jugable con los controles documentados.
@@ -196,5 +202,5 @@ de `/spec-impl`, sobre el spec generado.
 - **Calcá el patrón de Asteroids.** Leé los archivos de referencia antes de preparar el
   material; no inventes una arquitectura distinta.
 - **No asumas metadatos que el usuario no confirmó** (id, categoría, color…). Si faltan, preguntá.
-- **id consistente** entre `GAMES`, la ruta `/games/<id>` y `saveScore` — es lo que amarra el
-  juego al leaderboard.
+- **id consistente** entre la tabla `games`, la ruta `/games/<id>` y `saveScore` — es lo que
+  amarra el juego al leaderboard.

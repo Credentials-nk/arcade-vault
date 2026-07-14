@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { GAMES } from '@/lib/data';
+import { getGame } from '@/app/actions/getGames';
 import { getGameLeaderboard } from '@/app/actions/getLeaderboard';
 
 export default async function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const game = GAMES.find((g) => g.id === id);
+  const game = await getGame(id);
 
   if (!game) {
     return (
