@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GAMES, TICKER_ROWS, type Game, type LeaderboardEntry } from '@/lib/data';
+import { TICKER_ROWS, type Game, type LeaderboardEntry } from '@/lib/data';
+import { getGames } from '@/app/actions/getGames';
 import { getGlobalLeaderboard } from '@/app/actions/getLeaderboard';
 import { useReveal } from '@/hooks/useReveal';
 
@@ -189,6 +190,13 @@ export default function HomePage() {
       .catch(() => setTopPlayers([]));
   }, []);
 
+  const [games, setGames] = useState<Game[]>([]);
+  useEffect(() => {
+    getGames()
+      .then(setGames)
+      .catch(() => setGames([]));
+  }, []);
+
   const features = [
     {
       i: 'GAMEPAD',
@@ -286,7 +294,7 @@ export default function HomePage() {
           <div className="section-rule" />
         </div>
         <div className="mini-rail">
-          {GAMES.slice(0, 6).map((g) => (
+          {games.slice(0, 6).map((g) => (
             <MiniCard
               key={g.id}
               game={g}

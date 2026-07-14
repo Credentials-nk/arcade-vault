@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
-import { CATS, GAMES, type Game } from "@/lib/data";
+import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { CATS, type Game } from '@/lib/data';
+import { getGames } from '@/app/actions/getGames';
 
 function GameCard({ game }: { game: Game }) {
   const tiltRef = useRef<HTMLDivElement>(null);
@@ -19,18 +20,17 @@ function GameCard({ game }: { game: Game }) {
   const onLeave = () => {
     const el = tiltRef.current;
     if (!el) return;
-    el.style.transform = "";
+    el.style.transform = '';
   };
 
   const btnClass =
-    "btn" +
-    (game.color === "magenta" ? " magenta" : game.color === "yellow" ? " yellow" : "");
+    'btn' + (game.color === 'magenta' ? ' magenta' : game.color === 'yellow' ? ' yellow' : '');
 
   return (
-    <Link href={`/game/${game.id}`} style={{ textDecoration: "none" }}>
+    <Link href={`/game/${game.id}`} style={{ textDecoration: 'none' }}>
       <div ref={tiltRef} className="card" onMouseMove={onMove} onMouseLeave={onLeave}>
         <div className="cover">
-          <div className={"cover-bg " + game.cover} />
+          <div className={'cover-bg ' + game.cover} />
           <div className="label">{game.cat}</div>
         </div>
         <div className="meta">
@@ -39,7 +39,7 @@ function GameCard({ game }: { game: Game }) {
           <div className="row">
             <div className="score-badge">
               <span>MEJOR PUNTUACIÓN</span>
-              <b>{game.best.toLocaleString("es-ES")}</b>
+              <b>{game.best.toLocaleString('es-ES')}</b>
             </div>
             <span className={btnClass}>JUGAR</span>
           </div>
@@ -50,17 +50,22 @@ function GameCard({ game }: { game: Game }) {
 }
 
 export default function LibraryPage() {
-  const [q, setQ] = useState("");
-  const [cat, setCat] = useState("TODOS");
+  const [q, setQ] = useState('');
+  const [cat, setCat] = useState('TODOS');
+  const [games, setGames] = useState<Game[]>([]);
+
+  useEffect(() => {
+    getGames()
+      .then(setGames)
+      .catch(() => setGames([]));
+  }, []);
 
   const filtered = useMemo(
     () =>
-      GAMES.filter(
-        (g) =>
-          (cat === "TODOS" || g.cat === cat) &&
-          g.title.toLowerCase().includes(q.toLowerCase())
+      games.filter(
+        (g) => (cat === 'TODOS' || g.cat === cat) && g.title.toLowerCase().includes(q.toLowerCase())
       ),
-    [q, cat]
+    [games, q, cat]
   );
 
   return (
@@ -85,7 +90,7 @@ export default function LibraryPage() {
           {CATS.map((c) => (
             <button
               key={c}
-              className={"chip" + (cat === c ? " active" : "")}
+              className={'chip' + (cat === c ? ' active' : '')}
               onClick={() => setCat(c)}
             >
               {c}
@@ -101,15 +106,15 @@ export default function LibraryPage() {
         {filtered.length === 0 && (
           <div
             style={{
-              gridColumn: "1 / -1",
-              textAlign: "center",
+              gridColumn: '1 / -1',
+              textAlign: 'center',
               padding: 80,
-              color: "var(--ink-faint)",
+              color: 'var(--ink-faint)',
             }}
           >
             <div
               className="pixel"
-              style={{ fontSize: 14, color: "var(--magenta)", marginBottom: 12 }}
+              style={{ fontSize: 14, color: 'var(--magenta)', marginBottom: 12 }}
             >
               NO HAY RESULTADOS
             </div>
