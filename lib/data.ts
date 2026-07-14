@@ -61,6 +61,7 @@ export const GAMES: Game[] = [
     color: 'cyan',
     best: 28450,
     plays: '12.4K',
+    playRoute: '/games/bloque-buster',
   },
   {
     id: 'caida',
