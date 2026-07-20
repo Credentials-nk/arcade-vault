@@ -67,7 +67,9 @@ The `supabase` MCP server is enabled for this project (`list_tables`, `execute_s
   - `useUser.ts` — Mock auth backed by `localStorage` (no Supabase Auth wired up yet)
   - `useReveal.ts` — Scroll-reveal animation hook
 - **specs/** — One markdown file per feature (`NN-slug.md`), each with an `Estado` (Borrador → Aprobado → Implementado), Scope, data model, implementation plan and acceptance criteria
+- **references/** — Project reference docs: `implemented-games.md` (canonical list of integrated games with id/título/categoría/descripción/color) and `game-suggestions.md` (the `@game-planner` subagent's shared, versioned memory of proposed/discarded game ideas)
 - **.claude/skills/** — `spec`, `spec-impl`, `add-game`, `frontend-design`
+- **.claude/agents/** — `game-planner` (subagent that decides which new game to add next — see "Subagents" below)
 - **node_modules/** — Dependencies (excluded from TypeScript checks)
 
 ### Configuration Files
@@ -109,7 +111,7 @@ Two tables back the whole app (see `specs/04-supabase-setup.md`, `specs/06-leade
 
 ## Game integration pattern
 
-There is one validated reference implementation (Asteroids) that every subsequent game has copied. Before adding a new one, check `references/implemented-games.md` for the current id/título/categoría/descripción/color of every implemented game — pick a new `id` and avoid colliding categories/colors. When adding a new game, use the **`/add-game`** skill instead of improvising — it reads this same pattern from the live code and generates a spec for `/spec-impl` to implement. The pattern:
+There is one validated reference implementation (Asteroids) that every subsequent game has copied. Before adding a new one, check `references/implemented-games.md` for the current id/título/categoría/descripción/color of every implemented game — pick a new `id` and avoid colliding categories/colors. To **decide which** game to add next, run the **`@game-planner`** subagent first — it proposes a non-colliding candidate and records the choice in `references/game-suggestions.md` (see "Subagents"). When adding a new game, use the **`/add-game`** skill instead of improvising — it reads this same pattern from the live code and generates a spec for `/spec-impl` to implement. The pattern:
 
 1. `lib/games/<id>/game.ts` — engine in strict TypeScript with a **callback bridge** (`onScore`, `onLives`, `onLevel`, `onGameOver` — omit any the game doesn't have, e.g. Snake has no lives) that notifies React of internal state changes.
 2. `components/games/<id>/<Name>Game.tsx` — client component that mounts the `<canvas>`, constructs the engine with the callbacks, destroys it on unmount.
@@ -159,3 +161,9 @@ Never save screenshots to the project root or any other directory.
 - **Always use `/frontend-design` when creating HTML designs.** Provides guidance for distinctive, intentional visual design with attention to typography and aesthetic choices.
 - **Use `/add-game` to integrate a new canvas game** into the platform (generates the spec; `/spec-impl` does the actual implementation).
 - **Use `/spec` / `/spec-impl`** for any other new feature, following the Spec Driven Design workflow above.
+
+## Subagents
+
+Subagents live in `.claude/agents/*.md` and are invoked explicitly with `@<name>` (or via the Agent tool). Unlike skills, they run in their own context and return a result.
+
+- **`@game-planner`** — decides **which new canvas game to add next**. It sits **upstream of `/add-game`**: `@game-planner` decides _what_ game, `/add-game` generates the spec, `/spec-impl` implements it. It reads the catalog (`references/implemented-games.md`, the Supabase `games` table, and `CATS` + the color palette in `lib/data.ts`) and its own shared memory `references/game-suggestions.md`, then returns a ranked shortlist plus one recommendation, balancing fun, mechanic diversity, and filling empty categories/colors. Every proposal is **recorded in `references/game-suggestions.md`** (versioned, team-shared) so an idea is never proposed twice and never collides with an existing `id`/category/color. It does **not** write app code or specs — it stops at the recommendation and the memory update, then hands off to `/add-game`.
