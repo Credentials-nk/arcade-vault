@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import CaidaGame from '@/components/games/caida/CaidaGame';
 import { TetrisEngine, TetrisCallbacks } from '@/lib/games/caida/game';
 import { saveScore } from '@/app/actions/saveScore';
+import { GAME_SKINS } from '@/lib/skins';
 
 export default function CaidaPage() {
   const router = useRouter();
@@ -78,7 +79,7 @@ export default function CaidaPage() {
   }
 
   return (
-    <div className="av-player fade-in">
+    <div className="av-player fade-in" data-skin={GAME_SKINS['caida']}>
       {/* HUD exterior */}
       <div className="player-hud">
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>

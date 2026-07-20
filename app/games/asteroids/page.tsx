@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import AsteroidsGame from '@/components/games/asteroids/AsteroidsGame';
 import { AsteroidsEngine, AsteroidsCallbacks } from '@/lib/games/asteroids/game';
 import { saveScore } from '@/app/actions/saveScore';
+import { GAME_SKINS } from '@/lib/skins';
 
 export default function AsteroidsPage() {
   const router = useRouter();
@@ -67,7 +68,7 @@ export default function AsteroidsPage() {
   }
 
   return (
-    <div className="av-player fade-in">
+    <div className="av-player fade-in" data-skin={GAME_SKINS['asteroids']}>
       {/* HUD exterior */}
       <div className="player-hud">
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>

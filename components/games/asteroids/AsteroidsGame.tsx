@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { AsteroidsEngine, AsteroidsCallbacks } from '@/lib/games/asteroids/game';
+import { getSkin } from '@/lib/skins';
 
 interface AsteroidsGameProps {
   callbacks: AsteroidsCallbacks;
@@ -15,7 +16,7 @@ export default function AsteroidsGame({ callbacks, engineRef }: AsteroidsGamePro
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const engine = new AsteroidsEngine(canvas, callbacks);
+    const engine = new AsteroidsEngine(canvas, callbacks, getSkin('asteroids'));
     engineRef.current = engine;
 
     return () => {

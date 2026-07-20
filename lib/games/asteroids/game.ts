@@ -1,5 +1,18 @@
+import type { Skin } from '@/lib/skins';
+import { rgbTriplet } from '@/lib/skins';
+
 const W = 800;
 const H = 600;
+
+// Paleta de render derivada de la skin, precomputada una vez por el engine y
+// pasada a cada draw(). fgRgb es la terna "r, g, b" para rgba con alpha variable.
+interface RenderPalette {
+  bg: string;
+  fg: string;
+  fgRgb: string;
+  accent: string;
+  flame: string;
+}
 
 const wrap = (v: number, max: number): number => ((v % max) + max) % max;
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }): number =>
@@ -52,8 +65,8 @@ class Bullet {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = '#fff';
+  draw(ctx: CanvasRenderingContext2D, pal: RenderPalette): void {
+    ctx.fillStyle = pal.fg;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -111,11 +124,11 @@ class Asteroid {
     ];
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, pal: RenderPalette): void {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rot);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = pal.fg;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -157,18 +170,18 @@ class PowerUp {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, pal: RenderPalette): void {
     if (this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0) return;
     const pulse = 0.85 + Math.sin(performance.now() / 150) * 0.15;
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(Math.PI / 4);
-    ctx.strokeStyle = '#0ff';
+    ctx.strokeStyle = pal.accent;
     ctx.lineWidth = 2;
     const r = this.radius * pulse;
     ctx.strokeRect(-r, -r, r * 2, r * 2);
     ctx.restore();
-    ctx.fillStyle = '#0ff';
+    ctx.fillStyle = pal.accent;
     ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -260,14 +273,14 @@ class Ship {
     return [new Bullet(ox, oy, this.angle)];
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, pal: RenderPalette): void {
     if (this.dead) return;
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0) return;
 
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = pal.fg;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = 'round';
 
@@ -284,7 +297,7 @@ class Ship {
       ctx.moveTo(-8, -4);
       ctx.lineTo(-8 - rand(6, 14), 0);
       ctx.lineTo(-8, 4);
-      ctx.strokeStyle = 'rgba(255, 130, 0, 0.85)';
+      ctx.strokeStyle = pal.flame;
       ctx.stroke();
     }
 
@@ -322,9 +335,9 @@ class Particle {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, pal: RenderPalette): void {
     const alpha = this.ttl / this.life;
-    ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+    ctx.strokeStyle = `rgba(${pal.fgRgb}, ${alpha.toFixed(2)})`;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
@@ -338,6 +351,7 @@ class Particle {
 export class AsteroidsEngine {
   private ctx: CanvasRenderingContext2D;
   private cb: AsteroidsCallbacks;
+  private readonly pal: RenderPalette;
 
   private keys: Record<string, boolean> = {};
   private justPressed: Record<string, boolean> = {};
@@ -363,11 +377,18 @@ export class AsteroidsEngine {
   private readonly onKeyDown: (e: KeyboardEvent) => void;
   private readonly onKeyUp: (e: KeyboardEvent) => void;
 
-  constructor(canvas: HTMLCanvasElement, cb: AsteroidsCallbacks) {
+  constructor(canvas: HTMLCanvasElement, cb: AsteroidsCallbacks, skin: Skin) {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Cannot get 2d context from canvas');
     this.ctx = ctx;
     this.cb = cb;
+    this.pal = {
+      bg: skin.bg,
+      fg: skin.primary,
+      fgRgb: rgbTriplet(skin.primary),
+      accent: skin.accent,
+      flame: skin.flame,
+    };
 
     this.onKeyDown = (e: KeyboardEvent) => {
       if (!this.keys[e.code]) this.justPressed[e.code] = true;
@@ -546,7 +567,7 @@ export class AsteroidsEngine {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(-Math.PI / 2);
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = this.pal.fg;
     ctx.lineWidth = 1.2;
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -561,7 +582,7 @@ export class AsteroidsEngine {
 
   private drawHUD(): void {
     const ctx = this.ctx;
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = this.pal.fg;
     ctx.font = '15px monospace';
 
     ctx.textAlign = 'left';
@@ -574,21 +595,21 @@ export class AsteroidsEngine {
 
     if (this.ship.tripleShot > 0) {
       ctx.textAlign = 'left';
-      ctx.fillStyle = '#0ff';
+      ctx.fillStyle = this.pal.accent;
       ctx.fillText(`3x  ${this.ship.tripleShot.toFixed(1)}s`, 14, 46);
     }
   }
 
   private draw(): void {
     const ctx = this.ctx;
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = this.pal.bg;
     ctx.fillRect(0, 0, W, H);
 
-    this.particles.forEach((p) => p.draw(ctx));
-    this.asteroids.forEach((a) => a.draw(ctx));
-    this.powerUps.forEach((p) => p.draw(ctx));
-    this.bullets.forEach((b) => b.draw(ctx));
-    this.ship.draw(ctx);
+    this.particles.forEach((p) => p.draw(ctx, this.pal));
+    this.asteroids.forEach((a) => a.draw(ctx, this.pal));
+    this.powerUps.forEach((p) => p.draw(ctx, this.pal));
+    this.bullets.forEach((b) => b.draw(ctx, this.pal));
+    this.ship.draw(ctx, this.pal);
 
     this.drawHUD();
   }

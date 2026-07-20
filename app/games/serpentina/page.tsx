@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import SerpentinaGame from '@/components/games/serpentina/SerpentinaGame';
 import { SerpentinaEngine, SerpentinaCallbacks } from '@/lib/games/serpentina/game';
 import { saveScore } from '@/app/actions/saveScore';
+import { GAME_SKINS } from '@/lib/skins';
 
 export default function SerpentinaPage() {
   const router = useRouter();
@@ -75,7 +76,7 @@ export default function SerpentinaPage() {
   }
 
   return (
-    <div className="av-player fade-in">
+    <div className="av-player fade-in" data-skin={GAME_SKINS['serpentina']}>
       {/* HUD exterior */}
       <div className="player-hud">
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>

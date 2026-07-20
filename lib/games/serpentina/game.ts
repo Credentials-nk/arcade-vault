@@ -1,3 +1,6 @@
+import type { Skin } from '@/lib/skins';
+import { rgbTriplet } from '@/lib/skins';
+
 const CELL = 20;
 const COLS = 30;
 const ROWS = 30;
@@ -9,9 +12,6 @@ const MIN_TICK_MS = 70;
 const TICK_STEP_MS = 12;
 const POINTS_PER_LEVEL = 50;
 const SCORE_PER_FOOD = 10;
-
-const SNAKE_COLOR = '#00ff88';
-const FOOD_COLOR = '255, 0, 110';
 
 export interface SerpentinaCallbacks {
   onScore: (score: number) => void;
@@ -36,6 +36,8 @@ const KEY_DIRECTIONS: Record<string, Point> = {
 export class SerpentinaEngine {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly cb: SerpentinaCallbacks;
+  private readonly skin: Skin;
+  private readonly foodRgb: string;
 
   private snake: Point[] = [];
   private direction: Point = { x: 1, y: 0 };
@@ -53,11 +55,13 @@ export class SerpentinaEngine {
   private rafId = 0;
   private lastTime: number | null = null;
 
-  constructor(canvas: HTMLCanvasElement, cb: SerpentinaCallbacks) {
+  constructor(canvas: HTMLCanvasElement, cb: SerpentinaCallbacks, skin: Skin) {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Cannot get 2d context from canvas');
     this.ctx = ctx;
     this.cb = cb;
+    this.skin = skin;
+    this.foodRgb = rgbTriplet(skin.accent);
 
     window.addEventListener('keydown', this.onKeyDown);
 
@@ -154,16 +158,16 @@ export class SerpentinaEngine {
 
   private draw(): void {
     const ctx = this.ctx;
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = this.skin.bg;
     ctx.fillRect(0, 0, W, H);
 
-    ctx.fillStyle = SNAKE_COLOR;
+    ctx.fillStyle = this.skin.primary;
     for (const seg of this.snake) {
       ctx.fillRect(seg.x * CELL + 1, seg.y * CELL + 1, CELL - 2, CELL - 2);
     }
 
     const pulse = 0.7 + Math.sin(performance.now() / 150) * 0.3;
-    ctx.fillStyle = `rgba(${FOOD_COLOR}, ${pulse.toFixed(2)})`;
+    ctx.fillStyle = `rgba(${this.foodRgb}, ${pulse.toFixed(2)})`;
     ctx.fillRect(this.food.x * CELL + 2, this.food.y * CELL + 2, CELL - 4, CELL - 4);
   }
 

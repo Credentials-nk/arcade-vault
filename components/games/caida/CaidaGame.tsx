@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { TetrisEngine, TetrisCallbacks } from '@/lib/games/caida/game';
+import { getSkin } from '@/lib/skins';
 
 interface CaidaGameProps {
   callbacks: TetrisCallbacks;
@@ -17,7 +18,7 @@ export default function CaidaGame({ callbacks, engineRef }: CaidaGameProps) {
     const next = nextRef.current;
     if (!board || !next) return;
 
-    const engine = new TetrisEngine(board, next, callbacks);
+    const engine = new TetrisEngine(board, next, callbacks, getSkin('caida'));
     engineRef.current = engine;
 
     return () => {
