@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import NavWrapper from "@/components/NavWrapper";
+import type { Metadata } from 'next';
+import './globals.css';
+import NavWrapper from '@/components/NavWrapper';
 
 export const metadata: Metadata = {
-  title: "Arcade Vault",
-  description: "Plataforma de juegos arcade online. Compite por puntos.",
+  title: 'Arcade Vault',
+  description: 'Plataforma de juegos arcade online. Compite por puntos.',
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -25,12 +25,18 @@ export default function RootLayout({
       <body>
         <div className="av-bg" />
         <div className="av-noise" />
-        <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh',
+          }}
+        >
           <NavWrapper />
           <main className="av-main">{children}</main>
-          <footer className="av-footer">
-            ARCADE VAULT · v0.1.0-mvp · 2026
-          </footer>
+          <footer className="av-footer">ARCADE VAULT · v0.1.0-mvp · 2026</footer>
         </div>
       </body>
     </html>
