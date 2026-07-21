@@ -30,6 +30,8 @@ export interface Skin {
   highlight: string;
   /** Paleta de las 8 piezas de Caída, alineada con los índices 1–8 del tablero. */
   pieces: readonly [string, string, string, string, string, string, string, string];
+  /** Texto de HUD/overlay dibujado directo en el canvas (score, nivel, mensajes). */
+  text: string;
 }
 
 export type SkinName = 'neon' | 'clasico' | 'retro';
@@ -44,6 +46,7 @@ export const NEON: Skin = {
   line: 'rgba(255, 255, 255, 0.06)',
   highlight: 'rgba(255, 255, 255, 0.12)',
   pieces: ['#00f5ff', '#f5ff00', '#c04dff', '#00ff88', '#ff3b3b', '#4d9bff', '#ff9500', '#c7d0e0'],
+  text: '#e6e9ff',
 };
 
 // ── clasico ─────────────────────────────────────────────────────────────────
@@ -56,6 +59,7 @@ export const CLASICO: Skin = {
   line: 'rgba(255, 255, 255, 0.05)',
   highlight: 'rgba(255, 255, 255, 0.1)',
   pieces: ['#5aa9b5', '#c9b25c', '#9a76ad', '#6fa86f', '#c06b6b', '#6f8fb0', '#c2905a', '#8f97a3'],
+  text: '#e6e9ff',
 };
 
 // ── retro ───────────────────────────────────────────────────────────────────
@@ -68,6 +72,7 @@ export const RETRO: Skin = {
   line: 'rgba(255, 176, 0, 0.14)',
   highlight: 'rgba(255, 200, 90, 0.15)',
   pieces: ['#ffb000', '#ffc94d', '#e69e00', '#ffd98a', '#cc8c00', '#ffbf33', '#b37a00', '#8a5e00'],
+  text: '#ffd591',
 };
 
 const SKINS: Record<SkinName, Skin> = {

@@ -1,3 +1,6 @@
+import type { Skin } from '@/lib/skins';
+import { rgbTriplet } from '@/lib/skins';
+
 const W = 800;
 const H = 600;
 
@@ -249,6 +252,12 @@ export class ArkanoidEngine {
   private readonly bounceSound: HTMLAudioElement;
   private readonly breakSound: HTMLAudioElement;
 
+  // Paleta de la skin: el spritesheet (bloques/paddle/pelota) no se toca, solo el
+  // fondo del canvas y el texto de HUD/overlay que hoy se dibuja con fillStyle.
+  private readonly bg: string;
+  private readonly bgRgb: string;
+  private readonly hudText: string;
+
   private paddle: Rect = { x: 0, y: 560, w: 81, h: 14 };
   private ball: Ball = { x: 0, y: 0, w: 16, h: 16, vx: BASE_BALL_VX, vy: BASE_BALL_VY };
   private blocks: Block[] = [];
@@ -269,12 +278,15 @@ export class ArkanoidEngine {
   private rafId = 0;
   private lastTime: number | null = null;
 
-  constructor(canvas: HTMLCanvasElement, cb: ArkanoidCallbacks) {
+  constructor(canvas: HTMLCanvasElement, cb: ArkanoidCallbacks, skin: Skin) {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Cannot get 2d context from canvas');
     this.ctx = ctx;
     this.canvas = canvas;
     this.cb = cb;
+    this.bg = skin.bg;
+    this.bgRgb = rgbTriplet(skin.bg);
+    this.hudText = skin.text;
 
     this.bounceSound = new Audio(SOUND_BOUNCE_SRC);
     this.breakSound = new Audio(SOUND_BREAK_SRC);
@@ -453,9 +465,9 @@ export class ArkanoidEngine {
 
   private drawOverlay(message: string): void {
     const ctx = this.ctx;
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillStyle = `rgba(${this.bgRgb}, 0.6)`;
     ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = this.hudText;
     ctx.font = 'bold 64px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -464,7 +476,7 @@ export class ArkanoidEngine {
 
   private draw(): void {
     const ctx = this.ctx;
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = this.bg;
     ctx.fillRect(0, 0, W, H);
 
     for (const block of this.blocks) {
@@ -483,7 +495,7 @@ export class ArkanoidEngine {
     drawSprite(ctx, 'ball', this.ball.x, this.ball.y, this.ball.w, this.ball.h);
 
     if (this.gameState === 'playing') {
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = this.hudText;
       ctx.font = 'bold 18px monospace';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';

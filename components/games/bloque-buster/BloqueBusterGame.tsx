@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { ArkanoidEngine, ArkanoidCallbacks } from '@/lib/games/bloque-buster/game';
+import { getSkin } from '@/lib/skins';
 
 interface BloqueBusterGameProps {
   callbacks: ArkanoidCallbacks;
@@ -15,7 +16,7 @@ export default function BloqueBusterGame({ callbacks, engineRef }: BloqueBusterG
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const engine = new ArkanoidEngine(canvas, callbacks);
+    const engine = new ArkanoidEngine(canvas, callbacks, getSkin('bloque-buster'));
     engineRef.current = engine;
 
     return () => {
