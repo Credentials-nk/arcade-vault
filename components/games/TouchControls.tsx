@@ -9,14 +9,19 @@ export interface SyntheticKey {
   key: string; // ej. ' '   — leído por serpentina/bloque-buster (e.key)
 }
 
+export type ActionColor = 'red' | 'yellow' | 'blue';
+
 export interface TouchAction {
-  label: string; // ej. 'FUEGO', 'ROTAR'
-  synthKey: SyntheticKey;
+  label: string; // ej. 'A', 'B', 'ROTAR'
+  synthKey?: SyntheticKey; // omitido si muted
   repeat?: boolean; // re-despacha keydown en press-and-hold
+  muted?: boolean; // decorativo, sin dispatch — paridad visual con un gamepad de 2 botones
+  color?: ActionColor; // default 'red'
 }
 
 export interface TouchControlsProps {
   dpad?: Dir[]; // direcciones visibles; omitido = sin cruceta
+  dpadMuted?: Dir[]; // direcciones presentes pero sin efecto en el engine (ej. 'down' en asteroids) — se muestran atenuadas
   dpadRepeat?: boolean; // caida: true
   actions?: TouchAction[];
   drag?: boolean; // bloque-buster: overlay de arrastre
@@ -154,6 +159,7 @@ function DragLayer() {
  */
 export default function TouchControls({
   dpad,
+  dpadMuted,
   dpadRepeat,
   actions,
   drag,
@@ -173,22 +179,32 @@ export default function TouchControls({
               label={DIR_GLYPHS[dir]}
               synthKey={DIR_KEYS[dir]}
               repeat={dpadRepeat}
-              className={`touch-btn touch-dpad-btn touch-dpad-${dir}`}
+              className={`touch-btn touch-dpad-btn touch-dpad-${dir}${dpadMuted?.includes(dir) ? ' touch-dpad-muted' : ''}`}
             />
           ))}
         </div>
       )}
       {actions && actions.length > 0 && (
         <div className="touch-actions">
-          {actions.map((a) => (
-            <TouchButton
-              key={a.label}
-              label={a.label}
-              synthKey={a.synthKey}
-              repeat={a.repeat}
-              className="touch-btn touch-action-btn"
-            />
-          ))}
+          {actions.map((a) =>
+            a.muted || !a.synthKey ? (
+              <div
+                key={a.label}
+                className={`touch-btn touch-action-btn touch-action-${a.color ?? 'red'} touch-action-muted`}
+                aria-hidden="true"
+              >
+                {a.label}
+              </div>
+            ) : (
+              <TouchButton
+                key={a.label}
+                label={a.label}
+                synthKey={a.synthKey}
+                repeat={a.repeat}
+                className={`touch-btn touch-action-btn touch-action-${a.color ?? 'red'}`}
+              />
+            )
+          )}
         </div>
       )}
     </div>

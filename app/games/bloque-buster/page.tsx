@@ -113,7 +113,7 @@ export default function BloqueBusterPage() {
             {paused ? 'REANUDAR' : 'PAUSA'}
           </button>
           <button className="btn ghost" onClick={handleBack}>
-            REGRESAR
+            ATRÁS
           </button>
           <button className="btn ghost" onClick={handleExit}>
             SALIR
