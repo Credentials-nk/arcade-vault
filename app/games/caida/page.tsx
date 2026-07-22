@@ -55,6 +55,10 @@ export default function CaidaPage() {
     router.push('/library');
   }
 
+  function handleBack() {
+    router.push('/game/caida');
+  }
+
   function handleRestart() {
     setGameOver(false);
     setSaved(false);
@@ -105,6 +109,9 @@ export default function CaidaPage() {
         <div className="hud-actions">
           <button className="btn yellow" onClick={togglePause} disabled={gameOver}>
             {paused ? 'REANUDAR' : 'PAUSA'}
+          </button>
+          <button className="btn ghost" onClick={handleBack}>
+            ATRÁS
           </button>
           <button className="btn ghost" onClick={handleExit}>
             SALIR

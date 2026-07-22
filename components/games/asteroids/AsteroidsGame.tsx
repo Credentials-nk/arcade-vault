@@ -7,9 +7,10 @@ import { getSkin } from '@/lib/skins';
 interface AsteroidsGameProps {
   callbacks: AsteroidsCallbacks;
   engineRef: React.MutableRefObject<AsteroidsEngine | null>;
+  heightPx?: number; // override de altura (estira más allá del 4:3 natural, solo capa visual)
 }
 
-export default function AsteroidsGame({ callbacks, engineRef }: AsteroidsGameProps) {
+export default function AsteroidsGame({ callbacks, engineRef, heightPx }: AsteroidsGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -30,7 +31,12 @@ export default function AsteroidsGame({ callbacks, engineRef }: AsteroidsGamePro
       ref={canvasRef}
       width={800}
       height={600}
-      style={{ width: '100%', height: 'auto', maxWidth: '800px', display: 'block' }}
+      style={{
+        width: '100%',
+        height: heightPx ? `${heightPx}px` : 'auto',
+        maxWidth: '800px',
+        display: 'block',
+      }}
     />
   );
 }

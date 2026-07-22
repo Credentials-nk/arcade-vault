@@ -57,6 +57,10 @@ export default function BloqueBusterPage() {
     router.push('/library');
   }
 
+  function handleBack() {
+    router.push('/game/bloque-buster');
+  }
+
   function handleRestart() {
     setGameOver(false);
     setWon(false);
@@ -108,6 +112,9 @@ export default function BloqueBusterPage() {
         <div className="hud-actions">
           <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
             {paused ? 'REANUDAR' : 'PAUSA'}
+          </button>
+          <button className="btn ghost" onClick={handleBack}>
+            ATRÁS
           </button>
           <button className="btn ghost" onClick={handleExit}>
             SALIR
