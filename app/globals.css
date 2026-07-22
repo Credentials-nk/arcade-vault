@@ -1741,11 +1741,17 @@ a {
 .av-player-touch {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   min-height: 100dvh;
+  padding-top: 10px;
 }
 .av-player-touch .touch-controls {
-  margin-top: 28px;
+  margin-top: auto;
+}
+/* El canvas se estira más allá de su 4:3 natural (leve distorsión
+   aceptada a propósito) para ganar densidad visual; el contenedor no
+   debe recortarlo con su aspect-ratio fijo. */
+.av-player-touch .crt-screen {
+  aspect-ratio: auto;
 }
 /* Menos bezel/padding lateral = más ancho para el canvas = más alto
    también (mantiene 4:3 sin estirar/distorsionar el dibujo).

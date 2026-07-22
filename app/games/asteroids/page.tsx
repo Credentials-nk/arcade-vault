@@ -115,7 +115,12 @@ export default function AsteroidsPage() {
       {/* Canvas dentro del marco CRT */}
       <div className="crt">
         <div className="crt-screen" style={{ borderRadius: 0 }}>
-          <AsteroidsGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
+          <AsteroidsGame
+            key={gameKey}
+            callbacks={callbacks}
+            engineRef={engineRef}
+            heightPx={isTouch ? 340 : undefined}
+          />
           {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
         </div>
         <div className="crt-bottom">
