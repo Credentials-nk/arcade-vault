@@ -23,6 +23,7 @@ export default function AsteroidsPage() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [gameKey, setGameKey] = useState(0);
+  const [displayMode, setDisplayMode] = useState<'neon' | 'classic'>('neon');
 
   const [isPending, startTransition] = useTransition();
 
@@ -146,9 +147,15 @@ export default function AsteroidsPage() {
               <button className="btn yellow" onClick={handlePause}>
                 {paused ? 'REANUDAR' : 'PAUSA'}
               </button>
-              <button className="btn ghost" onClick={handleBack}>
-                ATRÁS
-              </button>
+              <select
+                className="mode-select"
+                aria-label="Modo visual"
+                value={displayMode}
+                onChange={(e) => setDisplayMode(e.target.value as 'neon' | 'classic')}
+              >
+                <option value="neon">NEON</option>
+                <option value="classic">CLASSIC</option>
+              </select>
               <button className="btn ghost" onClick={handleExit}>
                 SALIR
               </button>

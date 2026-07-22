@@ -1727,6 +1727,20 @@ a {
 .touch-hud-actions .btn.ghost:hover {
   box-shadow: none;
 }
+/* Selector de modo visual (placeholder de 2 opciones hardcodeadas):
+   sin efecto real todavía, se conecta cuando se mergee con el trabajo
+   de @skin-designer. */
+.mode-select {
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  padding: 9px 10px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--cyan);
+  border-radius: 4px;
+  cursor: pointer;
+}
 .touch-drag-layer {
   position: absolute;
   inset: 0;
@@ -1742,7 +1756,6 @@ a {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding-top: 10px;
 }
 .av-player-touch .touch-controls {
   margin-top: auto;
@@ -1754,12 +1767,16 @@ a {
   aspect-ratio: auto;
 }
 /* Menos bezel/padding lateral = más ancho para el canvas = más alto
-   también (mantiene 4:3 sin estirar/distorsionar el dibujo).
-   Selector compuesto (.av-player.av-player-touch) a propósito: gana la
-   especificidad sin depender del orden en la hoja de estilos. */
+   también (mantiene 4:3 sin estirar/distorsionar el dibujo). padding-top
+   también vive acá (no en .av-player-touch sola): a <720px la media
+   query de .av-player más abajo en la hoja aplica `padding` en shorthand
+   y resetearía el top a 0. Selector compuesto (.av-player.av-player-touch)
+   a propósito: gana la especificidad sin depender del orden en la hoja
+   de estilos. */
 .av-player.av-player-touch {
   padding-left: 1px;
   padding-right: 1px;
+  padding-top: 35px;
 }
 .av-player-touch .crt {
   padding: 3px;
