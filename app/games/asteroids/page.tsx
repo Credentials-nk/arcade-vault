@@ -3,12 +3,15 @@
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import AsteroidsGame from '@/components/games/asteroids/AsteroidsGame';
+import TouchControls from '@/components/games/TouchControls';
+import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { AsteroidsEngine, AsteroidsCallbacks } from '@/lib/games/asteroids/game';
 import { saveScore } from '@/app/actions/saveScore';
 
 export default function AsteroidsPage() {
   const router = useRouter();
   const engineRef = useRef<AsteroidsEngine | null>(null);
+  const isTouch = useTouchDevice();
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -20,6 +23,7 @@ export default function AsteroidsPage() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [gameKey, setGameKey] = useState(0);
+  const [displayMode, setDisplayMode] = useState<'neon' | 'classic'>('neon');
 
   const [isPending, startTransition] = useTransition();
 
@@ -41,6 +45,10 @@ export default function AsteroidsPage() {
 
   function handleExit() {
     router.push('/library');
+  }
+
+  function handleBack() {
+    router.push('/game/asteroids');
   }
 
   function handleRestart() {
@@ -67,43 +75,53 @@ export default function AsteroidsPage() {
   }
 
   return (
-    <div className="av-player fade-in">
-      {/* HUD exterior */}
-      <div className="player-hud">
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-          <div className="hud-stat">
-            <div className="l">Jugador</div>
-            <div className="v" style={{ color: 'var(--ink)' }}>
-              INVITADO
+    <div className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}>
+      {/* HUD exterior — oculto en touch: el canvas de Asteroids ya dibuja SCORE/NIVEL/vidas */}
+      {!isTouch && (
+        <div className="player-hud">
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            <div className="hud-stat">
+              <div className="l">Jugador</div>
+              <div className="v" style={{ color: 'var(--ink)' }}>
+                INVITADO
+              </div>
+            </div>
+            <div className="hud-stat">
+              <div className="l">Puntuación</div>
+              <div className="v">{score.toLocaleString('es-ES')}</div>
+            </div>
+            <div className="hud-stat lives">
+              <div className="l">Vidas</div>
+              <div className="v">{'♥ '.repeat(Math.max(0, lives)).trim() || '—'}</div>
+            </div>
+            <div className="hud-stat level">
+              <div className="l">Nivel</div>
+              <div className="v">{String(level).padStart(2, '0')}</div>
             </div>
           </div>
-          <div className="hud-stat">
-            <div className="l">Puntuación</div>
-            <div className="v">{score.toLocaleString('es-ES')}</div>
-          </div>
-          <div className="hud-stat lives">
-            <div className="l">Vidas</div>
-            <div className="v">{'♥ '.repeat(Math.max(0, lives)).trim() || '—'}</div>
-          </div>
-          <div className="hud-stat level">
-            <div className="l">Nivel</div>
-            <div className="v">{String(level).padStart(2, '0')}</div>
+          <div className="hud-actions">
+            <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
+              {paused ? 'REANUDAR' : 'PAUSA'}
+            </button>
+            <button className="btn ghost" onClick={handleBack}>
+              ATRÁS
+            </button>
+            <button className="btn ghost" onClick={handleExit}>
+              SALIR
+            </button>
           </div>
         </div>
-        <div className="hud-actions">
-          <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
-            {paused ? 'REANUDAR' : 'PAUSA'}
-          </button>
-          <button className="btn ghost" onClick={handleExit}>
-            SALIR
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Canvas dentro del marco CRT */}
       <div className="crt">
         <div className="crt-screen" style={{ borderRadius: 0 }}>
-          <AsteroidsGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
+          <AsteroidsGame
+            key={gameKey}
+            callbacks={callbacks}
+            engineRef={engineRef}
+            heightPx={isTouch ? 340 : undefined}
+          />
           {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
         </div>
         <div className="crt-bottom">
@@ -112,6 +130,39 @@ export default function AsteroidsPage() {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+
+      {isTouch && (
+        <>
+          <TouchControls
+            dpad={['up', 'left', 'right', 'down']}
+            dpadMuted={['down']}
+            actions={[
+              { label: 'B', muted: true, color: 'blue' },
+              { label: 'A', synthKey: { code: 'Space', key: ' ' }, color: 'red' },
+            ]}
+            hidden={gameOver}
+          />
+          {!gameOver && (
+            <div className="hud-actions touch-hud-actions">
+              <button className="btn yellow" onClick={handlePause}>
+                {paused ? 'REANUDAR' : 'PAUSA'}
+              </button>
+              <select
+                className="mode-select"
+                aria-label="Modo visual"
+                value={displayMode}
+                onChange={(e) => setDisplayMode(e.target.value as 'neon' | 'classic')}
+              >
+                <option value="neon">NEON</option>
+                <option value="classic">CLASSIC</option>
+              </select>
+              <button className="btn ghost" onClick={handleExit}>
+                SALIR
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Modal Game Over */}
       {gameOver && (

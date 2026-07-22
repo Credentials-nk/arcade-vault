@@ -52,6 +52,10 @@ export default function SerpentinaPage() {
     router.push('/library');
   }
 
+  function handleBack() {
+    router.push('/game/serpentina');
+  }
+
   function handleRestart() {
     setGameOver(false);
     setSaved(false);
@@ -97,6 +101,9 @@ export default function SerpentinaPage() {
         <div className="hud-actions">
           <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
             {paused ? 'REANUDAR' : 'PAUSA'}
+          </button>
+          <button className="btn ghost" onClick={handleBack}>
+            ATRÁS
           </button>
           <button className="btn ghost" onClick={handleExit}>
             SALIR
