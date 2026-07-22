@@ -1,20 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
+
+const QUERY = '(pointer: coarse)';
+
+function subscribe(callback: () => void) {
+  const mq = window.matchMedia(QUERY);
+  mq.addEventListener('change', callback);
+  return () => mq.removeEventListener('change', callback);
+}
+
+function getSnapshot(): boolean {
+  return window.matchMedia(QUERY).matches;
+}
+
+function getServerSnapshot(): boolean {
+  return false; // el servidor no conoce el pointer → sin mismatch de hidratación
+}
 
 /**
  * Detecta si el dispositivo es táctil vía `(pointer: coarse)`.
- * Inicializa en `false` y resuelve en cliente para evitar
- * mismatch de hidratación (el servidor no conoce el pointer).
+ * En servidor devuelve `false`; en cliente se suscribe al media
+ * query y refleja cambios en vivo.
  */
 export function useTouchDevice(): boolean {
-  const [isTouch, setIsTouch] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(pointer: coarse)');
-    setIsTouch(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setIsTouch(e.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-
-  return isTouch;
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

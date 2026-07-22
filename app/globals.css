@@ -1619,6 +1619,95 @@ a {
   text-shadow: 0 0 16px var(--cyan);
 }
 
+/* ===== touch controls (spec 11) ===== */
+.touch-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none; /* solo los botones capturan toques */
+  font-family: var(--pixel);
+}
+.touch-btn {
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  background: rgba(10, 10, 15, 0.35);
+  border: 1px solid rgba(0, 245, 255, 0.45);
+  color: var(--cyan);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.touch-btn:active {
+  background: rgba(0, 245, 255, 0.22);
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.35);
+}
+.touch-dpad {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(3, 52px);
+  gap: 5px;
+  opacity: 0.85;
+}
+.touch-dpad-up {
+  grid-area: 1 / 2;
+}
+.touch-dpad-left {
+  grid-area: 2 / 1;
+}
+.touch-dpad-right {
+  grid-area: 2 / 3;
+}
+.touch-dpad-down {
+  grid-area: 3 / 2;
+}
+.touch-dpad-btn {
+  font-size: 15px;
+}
+.touch-actions {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+  opacity: 0.85;
+}
+.touch-action-btn {
+  min-width: 72px;
+  height: 52px;
+  padding: 0 14px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+.touch-drag-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (max-width: 720px) {
+  .touch-dpad {
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+    gap: 4px;
+  }
+  .touch-action-btn {
+    min-width: 60px;
+    height: 44px;
+    padding: 0 10px;
+  }
+}
+
 /* ===== misc ===== */
 .tw-section {
   margin-bottom: 14px;

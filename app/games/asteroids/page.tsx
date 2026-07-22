@@ -3,12 +3,15 @@
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import AsteroidsGame from '@/components/games/asteroids/AsteroidsGame';
+import TouchControls from '@/components/games/TouchControls';
+import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { AsteroidsEngine, AsteroidsCallbacks } from '@/lib/games/asteroids/game';
 import { saveScore } from '@/app/actions/saveScore';
 
 export default function AsteroidsPage() {
   const router = useRouter();
   const engineRef = useRef<AsteroidsEngine | null>(null);
+  const isTouch = useTouchDevice();
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -105,6 +108,13 @@ export default function AsteroidsPage() {
         <div className="crt-screen" style={{ borderRadius: 0 }}>
           <AsteroidsGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
           {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
+          {isTouch && (
+            <TouchControls
+              dpad={['up', 'left', 'right']}
+              actions={[{ label: 'FUEGO', synthKey: { code: 'Space', key: ' ' } }]}
+              hidden={gameOver}
+            />
+          )}
         </div>
         <div className="crt-bottom">
           <span className="led">SEÑAL OK</span>
