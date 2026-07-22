@@ -1050,6 +1050,7 @@ a {
 .hud-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .crt {
@@ -1648,13 +1649,19 @@ a {
 }
 .touch-dpad {
   position: absolute;
-  left: 10px;
-  bottom: 10px;
+  left: 22px;
+  bottom: 22px;
   display: grid;
   grid-template-columns: repeat(3, 52px);
   grid-template-rows: repeat(3, 52px);
   gap: 5px;
-  opacity: 0.85;
+  padding: 10px;
+  background: rgba(10, 10, 15, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  border-radius: 18px;
+  opacity: 0.9;
 }
 .touch-dpad-up {
   grid-area: 1 / 2;
@@ -1673,13 +1680,19 @@ a {
 }
 .touch-actions {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
+  right: 22px;
+  bottom: 22px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   align-items: flex-end;
-  opacity: 0.85;
+  padding: 10px;
+  background: rgba(10, 10, 15, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  border-radius: 18px;
+  opacity: 0.9;
 }
 .touch-action-btn {
   min-width: 72px;
@@ -1697,9 +1710,17 @@ a {
 }
 @media (max-width: 720px) {
   .touch-dpad {
+    left: 14px;
+    bottom: 14px;
+    padding: 8px;
     grid-template-columns: repeat(3, 44px);
     grid-template-rows: repeat(3, 44px);
     gap: 4px;
+  }
+  .touch-actions {
+    right: 14px;
+    bottom: 14px;
+    padding: 8px;
   }
   .touch-action-btn {
     min-width: 60px;

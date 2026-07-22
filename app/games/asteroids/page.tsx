@@ -46,6 +46,10 @@ export default function AsteroidsPage() {
     router.push('/library');
   }
 
+  function handleBack() {
+    router.push('/game/asteroids');
+  }
+
   function handleRestart() {
     setGameOver(false);
     setSaved(false);
@@ -96,6 +100,9 @@ export default function AsteroidsPage() {
         <div className="hud-actions">
           <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
             {paused ? 'REANUDAR' : 'PAUSA'}
+          </button>
+          <button className="btn ghost" onClick={handleBack}>
+            REGRESAR
           </button>
           <button className="btn ghost" onClick={handleExit}>
             SALIR
