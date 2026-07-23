@@ -865,6 +865,21 @@ a {
     radial-gradient(circle at 60% 60%, var(--yellow) 0 5px, transparent 6px);
   filter: drop-shadow(0 0 6px rgba(0, 245, 255, 0.4));
 }
+.cover-frogger {
+  background: linear-gradient(180deg, #001f0a 0%, #001830 45%, #0a0a18 100%);
+}
+.cover-frogger::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 28px, rgba(0, 0, 0, 0.35) 28px 30px) 0 22% / 100%
+      30% no-repeat,
+    radial-gradient(circle at 30% 62%, var(--cyan) 0 5px, transparent 6px),
+    radial-gradient(circle at 65% 70%, var(--cyan) 0 4px, transparent 5px),
+    radial-gradient(circle at 50% 28%, var(--green) 0 12px, transparent 13px);
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.5));
+}
 
 /* ===== detail screen ===== */
 .av-detail {
@@ -1072,6 +1087,13 @@ a {
 .crt-800 {
   max-width: 848px;
   margin: 0 auto;
+}
+/* .crt-screen fija aspect-ratio: 4/3 con overflow: hidden — un canvas de otra
+   proporción queda recortado (le pasa hoy a serpentina, cuadrado 600×600,
+   fuera de alcance de este spec). Frogger es 640×560 (8:7), así que pisa el
+   aspect-ratio en su propio .crt-screen para no recortar la fila de inicio. */
+.crt-frogger .crt-screen {
+  aspect-ratio: 640 / 560;
 }
 .crt::before {
   content: '';

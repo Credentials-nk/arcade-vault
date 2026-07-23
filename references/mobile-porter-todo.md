@@ -236,6 +236,74 @@ build` verde; screenshots en `.playwright-screenshots/` a 360×740 y
   cruceta/A-B, separación del divisor inferior, legibilidad del caption en
   Caída), ajustar los números de este bloque y re-correr el agente.
 
+## Frogger — integración vía `/spec-impl-game` (2026-07-23, Fase D)
+
+Quinto juego del catálogo (`id: frogger`, rama `spec-01-frogger-core`, PR #21),
+integrado por la cadena `/spec-impl-game` (engine + componente + página +
+skin `clasico`, ya commiteados en el PR). `@mobile-porter` corrió como **Fase
+D**, con alcance explícitamente acotado a alinear el shell táctil de Frogger
+contra Asteroids — **sin re-auditar** asteroids/caida/serpentina/bloque-buster
+(ya alineados de corridas previas).
+
+### Auditoría
+
+`app/games/frogger/page.tsx` **ya llegó consumiendo `TouchPlayerShell`**
+(construido por quien implementó la Fase C, copiando el patrón vigente de
+Asteroids) — no fue necesario tocar ni la página ni ningún componente. Contra
+el criterio unificado (ver más arriba):
+
+| Punto                                       | Asteroids                                               | Frogger (como llegó)                                                                                                                                                                                                                                  |
+| ------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shell                                       | `TouchPlayerShell`                                      | `TouchPlayerShell` (idéntico)                                                                                                                                                                                                                         |
+| `heightPx` en touch                         | `340`                                                   | `340`                                                                                                                                                                                                                                                 |
+| `maxWidth` del `<canvas>` (propio, no fijo) | `800px` (su ancho nativo)                               | `640px` (`FROGGER_CANVAS_W`, su ancho nativo) — mismo criterio, no una desviación                                                                                                                                                                     |
+| `dpad`                                      | 4 direcciones, `dpadMuted: ['down']` (no usa retroceso) | 4 direcciones, sin `dpadMuted` (salta en las 4 — correcto, confirmado contra `KEY_DIRECTIONS` del engine)                                                                                                                                             |
+| `actions`                                   | B muted, A dispara (`Space`)                            | B muted, A muted (Frogger no tiene botón de acción, solo movimiento — correcto)                                                                                                                                                                       |
+| Stats en touch                              | el canvas dibuja SCORE/NIVEL/vidas                      | el canvas dibuja SCORE/NIVEL/vidas (`drawHUD()`, línea ~574 de `lib/games/frogger/game.ts`) — sin overlay adicional, igual que la referencia                                                                                                          |
+| `.crt-frogger { aspect-ratio: 640/560 }`    | n/a                                                     | solo se aplica en la rama desktop (`<div className="crt crt-frogger">`); en touch el shell monta `crt-800` sin esa clase, así que `.av-player-touch .crt-screen { aspect-ratio: auto }` gobierna sin conflicto — **confirmado, no hace falta ajuste** |
+
+**Resultado: cero cambios de código.** Frogger ya cumplía el shell al 100% al
+llegar a esta fase — el mapeo de botonera (4 direcciones activas, A/B muted)
+que traía la página era el correcto y no requirió corrección.
+
+### Verificación
+
+El entorno de desarrollo de este repo **no** dispara `(pointer: coarse)` con
+solo `browser_resize` del MCP de Playwright (confirmado: a 360×740 la página
+siguió renderizando la rama desktop — HUD exterior, nav visible). Para una
+verificación más fiel en este entorno, se lanzó un `chromium` standalone vía
+un script Node ad-hoc (paquete `playwright` instalado solo en el scratchpad
+de la sesión, apuntando al binario ya cacheado en
+`%LOCALAPPDATA%\ms-playwright\chromium-1223`, nada de esto tocó el repo) con
+`newContext({ hasTouch: true, isMobile: true })`, lo que sí fuerza
+`pointer: coarse` y monta el shell táctil real. **Técnica reutilizable en
+próximas corridas** si el MCP de Playwright no expone emulación táctil.
+
+- Screenshots (`.playwright-screenshots/`, gitignored):
+  `frogger-touch-360x740.png`, `frogger-touch-390x844.png` (shell real) y
+  `asteroids-touch-360x740-ref.png` / `asteroids-touch-390x844-ref.png` como
+  referencia lado a lado — misma caja, mismo panel, mismo wrap del bisel
+  inferior; único cambio visible el contenido del canvas y el estado
+  atenuado de A/B (ambos muted en Frogger vs. A activo en Asteroids, tal
+  como se espera).
+- `document.documentElement.scrollHeight === clientHeight` verificado por
+  script en `/games/frogger` a 360×740 y 390×844, y en `/games/asteroids` a
+  360×740 como control — **sin scroll vertical en ningún caso**.
+- `frogger-desktop-check.png`: pasada rápida a 1280×900 sin emulación
+  táctil — HUD exterior + `.crt.crt-frogger` intactos, sin relación con este
+  cambio (no se tocó código desktop).
+- `npm run build`: verde (sin cambios de código, corrida solo para
+  confirmar la base antes de auditar).
+
+### Pendiente
+
+Como siempre, la validación definitiva es del usuario en su **teléfono
+real** — este entorno solo permite una emulación de `pointer: coarse`
+razonable, no idéntica a un dispositivo físico. Si en el teléfono se ve
+algún desvío puntual de Frogger (p. ej. el `maxWidth: 640px` del canvas
+dejando un margen dentro de la caja en un dispositivo ancho), reportarlo acá
+para ajustar en una corrida futura.
+
 ## Relacionado
 
 - `specs/11-controles-tactiles.md` — spec original de controles táctiles

@@ -89,6 +89,7 @@ export const GAME_SKINS: Record<string, SkinName> = {
   caida: 'clasico',
   serpentina: 'neon',
   'bloque-buster': 'neon',
+  frogger: 'clasico',
 };
 
 /** Resuelve la paleta de un juego por su id (fallback a NEON). */
