@@ -351,7 +351,7 @@ class Particle {
 export class AsteroidsEngine {
   private ctx: CanvasRenderingContext2D;
   private cb: AsteroidsCallbacks;
-  private readonly pal: RenderPalette;
+  private pal: RenderPalette;
 
   private keys: Record<string, boolean> = {};
   private justPressed: Record<string, boolean> = {};
@@ -403,6 +403,17 @@ export class AsteroidsEngine {
 
     this.initGame();
     this.rafId = requestAnimationFrame(this.loop);
+  }
+
+  /** Recalcula la paleta de render a partir de una nueva skin, en caliente (sin reiniciar la partida). */
+  setSkin(skin: Skin): void {
+    this.pal = {
+      bg: skin.bg,
+      fg: skin.primary,
+      fgRgb: rgbTriplet(skin.primary),
+      accent: skin.accent,
+      flame: skin.flame,
+    };
   }
 
   setPaused(paused: boolean): void {

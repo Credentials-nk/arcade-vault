@@ -1063,6 +1063,16 @@ a {
     0 30px 80px -20px rgba(var(--cyan-glow), 0.35);
   overflow: hidden;
 }
+/* Sin este tope, .crt crece con .av-player (hasta 1100px) mientras el
+   canvas de cada juego respeta su propia resolución nativa (800px en
+   asteroids/bloque-buster) — el .crt-screen queda más ancho que el canvas
+   y sobra una franja negra sin dibujar abajo/derecha. Modificador opuesto
+   a nivel de página (no en la clase base .crt) porque serpentina (600px)
+   y caída (tablero+panel «siguiente») tienen anchos nativos distintos. */
+.crt-800 {
+  max-width: 848px;
+  margin: 0 auto;
+}
 .crt::before {
   content: '';
   position: absolute;
@@ -1726,10 +1736,20 @@ a {
 .touch-hud-actions .btn.ghost:hover {
   box-shadow: none;
 }
-/* Selector de modo visual (placeholder de 2 opciones hardcodeadas):
-   sin efecto real todavía, se conecta cuando se mergee con el trabajo
-   de @skin-designer. */
-.mode-select {
+/* Selector de skin (neon/clasico/retro), reemplaza a GAME_SKINS['asteroids']
+   como fuente de verdad de la skin activa. Dropdown propio (no <select>
+   nativo): un <select> nativo siempre abre hacia abajo y en la fila táctil
+   (pegada al footer) el navegador termina scrolleando la página para
+   mostrar las opciones. Este componente elige el lado con más espacio al
+   abrirse (`.mode-dropdown-list` = arriba por defecto, `-down` = abajo,
+   ver el cálculo en el onClick del trigger en page.tsx) — necesario porque
+   el mismo selector se usa en la fila táctil (pegada al footer, abre hacia
+   arriba) y en el HUD de desktop (pegado al header, abre hacia abajo). */
+.mode-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+.mode-dropdown-trigger {
   font-family: var(--pixel);
   font-size: 9px;
   letter-spacing: 0.06em;
@@ -1739,6 +1759,48 @@ a {
   border: 1px solid var(--cyan);
   border-radius: 4px;
   cursor: pointer;
+}
+.mode-dropdown-list {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 6px;
+  min-width: 100%;
+  list-style: none;
+  padding: 4px;
+  background: #0a0a0f;
+  border: 1px solid var(--cyan);
+  border-radius: 4px;
+  box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.5);
+  z-index: 60;
+  white-space: nowrap;
+}
+.mode-dropdown-list-down {
+  bottom: auto;
+  top: 100%;
+  margin-bottom: 0;
+  margin-top: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+.mode-dropdown-list li + li {
+  margin-top: 4px;
+}
+.mode-dropdown-list button {
+  width: 100%;
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  padding: 8px 10px;
+  color: var(--ink-dim);
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+.mode-dropdown-list button[aria-selected='true'] {
+  background: var(--cyan);
+  color: #05050a;
 }
 .touch-drag-layer {
   position: absolute;

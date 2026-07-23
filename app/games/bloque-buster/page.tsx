@@ -123,7 +123,7 @@ export default function BloqueBusterPage() {
       </div>
 
       {/* Canvas dentro del marco CRT */}
-      <div className="crt">
+      <div className="crt crt-800">
         <div className="crt-screen" style={{ borderRadius: 0 }}>
           <BloqueBusterGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
           {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}

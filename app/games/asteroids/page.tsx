@@ -1,13 +1,17 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import AsteroidsGame from '@/components/games/asteroids/AsteroidsGame';
 import TouchControls from '@/components/games/TouchControls';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { AsteroidsEngine, AsteroidsCallbacks } from '@/lib/games/asteroids/game';
 import { saveScore } from '@/app/actions/saveScore';
-import { GAME_SKINS } from '@/lib/skins';
+import { GAME_SKINS, NEON, CLASICO, RETRO, type Skin, type SkinName } from '@/lib/skins';
+
+const TOUCH_SKINS: Record<SkinName, Skin> = { neon: NEON, clasico: CLASICO, retro: RETRO };
+const MODE_LABELS: Record<SkinName, string> = { neon: 'NEON', clasico: 'CLASSIC', retro: 'RETRO' };
+const MODE_ORDER: SkinName[] = ['neon', 'clasico', 'retro'];
 
 export default function AsteroidsPage() {
   const router = useRouter();
@@ -24,9 +28,30 @@ export default function AsteroidsPage() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [gameKey, setGameKey] = useState(0);
-  const [displayMode, setDisplayMode] = useState<'neon' | 'classic'>('neon');
+  const [displayMode, setDisplayMode] = useState<SkinName>(GAME_SKINS['asteroids']);
+  const [modeMenuOpen, setModeMenuOpen] = useState(false);
+  const [modeMenuUpward, setModeMenuUpward] = useState(true);
+  const modeDropdownRef = useRef<HTMLDivElement>(null);
 
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!modeMenuOpen) return;
+    function onClickOutside(e: MouseEvent) {
+      if (!modeDropdownRef.current?.contains(e.target as Node)) {
+        setModeMenuOpen(false);
+      }
+    }
+    document.addEventListener('pointerdown', onClickOutside);
+    return () => document.removeEventListener('pointerdown', onClickOutside);
+  }, [modeMenuOpen]);
+
+  // El selector de modo reemplaza a GAME_SKINS['asteroids'] como fuente de
+  // verdad de la skin activa (arranca en la canónica) y la aplica en caliente
+  // tanto al canvas (engine.setSkin) como al chrome (data-skin más abajo).
+  useEffect(() => {
+    engineRef.current?.setSkin(TOUCH_SKINS[displayMode]);
+  }, [displayMode, gameKey]);
 
   const callbacks: AsteroidsCallbacks = {
     onScore: setScore,
@@ -46,10 +71,6 @@ export default function AsteroidsPage() {
 
   function handleExit() {
     router.push('/library');
-  }
-
-  function handleBack() {
-    router.push('/game/asteroids');
   }
 
   function handleRestart() {
@@ -75,10 +96,61 @@ export default function AsteroidsPage() {
     });
   }
 
+  const modeDropdown = (
+    <div className="mode-dropdown" ref={modeDropdownRef}>
+      <button
+        type="button"
+        className="mode-dropdown-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={modeMenuOpen}
+        aria-label="Modo visual"
+        onClick={() => {
+          setModeMenuOpen((open) => {
+            const next = !open;
+            if (next) {
+              // Elige el lado con más espacio libre: en touch el botón vive
+              // pegado al footer (abre arriba); en desktop vive pegado al
+              // header (abre abajo).
+              const rect = modeDropdownRef.current?.getBoundingClientRect();
+              const spaceAbove = rect?.top ?? 0;
+              const spaceBelow = rect ? window.innerHeight - rect.bottom : 0;
+              setModeMenuUpward(spaceAbove > spaceBelow);
+            }
+            return next;
+          });
+        }}
+      >
+        {MODE_LABELS[displayMode]} {modeMenuUpward ? '▲' : '▼'}
+      </button>
+      {modeMenuOpen && (
+        <ul
+          className={`mode-dropdown-list${modeMenuUpward ? '' : ' mode-dropdown-list-down'}`}
+          role="listbox"
+        >
+          {MODE_ORDER.map((mode) => (
+            <li key={mode}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={displayMode === mode}
+                onClick={() => {
+                  setDisplayMode(mode);
+                  setModeMenuOpen(false);
+                }}
+              >
+                {MODE_LABELS[mode]}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+
   return (
     <div
       className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}
-      data-skin={GAME_SKINS['asteroids']}
+      data-skin={displayMode}
     >
       {/* HUD exterior — oculto en touch: el canvas de Asteroids ya dibuja SCORE/NIVEL/vidas */}
       {!isTouch && (
@@ -107,9 +179,7 @@ export default function AsteroidsPage() {
             <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
               {paused ? 'REANUDAR' : 'PAUSA'}
             </button>
-            <button className="btn ghost" onClick={handleBack}>
-              ATRÁS
-            </button>
+            {modeDropdown}
             <button className="btn ghost" onClick={handleExit}>
               SALIR
             </button>
@@ -118,7 +188,7 @@ export default function AsteroidsPage() {
       )}
 
       {/* Canvas dentro del marco CRT */}
-      <div className="crt">
+      <div className="crt crt-800">
         <div className="crt-screen" style={{ borderRadius: 0 }}>
           <AsteroidsGame
             key={gameKey}
@@ -151,15 +221,7 @@ export default function AsteroidsPage() {
               <button className="btn yellow" onClick={handlePause}>
                 {paused ? 'REANUDAR' : 'PAUSA'}
               </button>
-              <select
-                className="mode-select"
-                aria-label="Modo visual"
-                value={displayMode}
-                onChange={(e) => setDisplayMode(e.target.value as 'neon' | 'classic')}
-              >
-                <option value="neon">NEON</option>
-                <option value="classic">CLASSIC</option>
-              </select>
+              {modeDropdown}
               <button className="btn ghost" onClick={handleExit}>
                 SALIR
               </button>
