@@ -68,7 +68,7 @@ The `supabase` MCP server is enabled for this project (`list_tables`, `execute_s
   - `useReveal.ts` — Scroll-reveal animation hook
 - **specs/** — One markdown file per feature (`NN-slug.md`), each with an `Estado` (Borrador → Aprobado → Implementado), Scope, data model, implementation plan and acceptance criteria
 - **references/** — Project reference docs: `implemented-games.md` (canonical list of integrated games with id/título/categoría/descripción/color) and `game-suggestions.md` (the `@game-planner` subagent's shared, versioned memory of proposed/discarded game ideas)
-- **.claude/skills/** — `spec`, `spec-impl`, `add-game`, `frontend-design`
+- **.claude/skills/** — `spec`, `spec-impl`, `spec-impl-game`, `add-game`, `frontend-design`
 - **.claude/agents/** — `game-planner` (subagent that decides which new game to add next — see "Subagents" below)
 - **node_modules/** — Dependencies (excluded from TypeScript checks)
 
@@ -126,8 +126,9 @@ Every feature starts as a spec before any app code is written.
 1. **`/spec`** — generic spec generator (question-driven, uses `.claude/skills/spec/template.md`)
 2. **`/add-game`** — specialized spec generator for integrating a new canvas game; pre-loads the pattern above so it doesn't have to be re-derived per game
 3. **`/spec-impl`** — implements an approved spec (`specs/NN-slug.md`), commit by commit per its plan; the **last** step of any `/spec-impl` run updates the spec's `Estado` to **Implementado** and commits that before opening the PR
-4. Spec lifecycle: **Borrador** (drafted, awaiting human approval) → **Aprobado** → **Implementado**
-5. Reference: https://github.com/Klerith/fernando-skills
+4. **`/spec-impl-game`** — specialization of `/spec-impl` for game specs (the ones `/add-game` or `@game-jam` produce): runs the exact same four phases, then, only on success, chains `@skin-designer` → PR → `@mobile-porter` **in sequence**, scoped to just the new game. The skin commit lands in the same PR as the game; `@mobile-porter`'s touch-layout diff is left uncommitted for real-device validation.
+5. Spec lifecycle: **Borrador** (drafted, awaiting human approval) → **Aprobado** → **Implementado**
+6. Reference: https://github.com/Klerith/fernando-skills
 
 Current specs (all Implementado): `01-mvp-screens`, `02-home-screen`, `03-about-contact`, `04-supabase-setup`, `05-asteroids-game`, `06-leaderboard`, `07-caida-game`, `08-bloque-buster-game`, `09-games-catalog-supabase`, `10-serpentina-game`.
 
@@ -160,6 +161,7 @@ Never save screenshots to the project root or any other directory.
 
 - **Always use `/frontend-design` when creating HTML designs.** Provides guidance for distinctive, intentional visual design with attention to typography and aesthetic choices.
 - **Use `/add-game` to integrate a new canvas game** into the platform (generates the spec; `/spec-impl` does the actual implementation).
+- **Use `/spec-impl-game` instead of `/spec-impl` for game specs** — same four phases, plus an automatic `@skin-designer` → PR → `@mobile-porter` chain scoped to the new game.
 - **Use `/spec` / `/spec-impl`** for any other new feature, following the Spec Driven Design workflow above.
 
 ## Subagents
