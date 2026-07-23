@@ -7,9 +7,14 @@ import { getSkin } from '@/lib/skins';
 interface BloqueBusterGameProps {
   callbacks: ArkanoidCallbacks;
   engineRef: React.MutableRefObject<ArkanoidEngine | null>;
+  heightPx?: number; // override de altura (criterio táctil unificado — ver references/mobile-porter-todo.md)
 }
 
-export default function BloqueBusterGame({ callbacks, engineRef }: BloqueBusterGameProps) {
+export default function BloqueBusterGame({
+  callbacks,
+  engineRef,
+  heightPx,
+}: BloqueBusterGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -31,7 +36,12 @@ export default function BloqueBusterGame({ callbacks, engineRef }: BloqueBusterG
       ref={canvasRef}
       width={800}
       height={600}
-      style={{ width: '100%', height: 'auto', maxWidth: '800px', display: 'block' }}
+      style={{
+        width: '100%',
+        height: heightPx ? `${heightPx}px` : 'auto',
+        maxWidth: '800px',
+        display: 'block',
+      }}
     />
   );
 }

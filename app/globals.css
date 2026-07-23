@@ -1848,6 +1848,46 @@ a {
 .av-player-touch .crt {
   padding: 3px;
 }
+/* Stats DENTRO de la caja del display (contenido, no shell — el shell táctil
+   es inamovible e idéntico en los 4 juegos, ver TouchPlayerShell.tsx y
+   references/mobile-porter-todo.md). Para juegos cuyo canvas NO dibuja
+   puntuación/nivel: serpentina superpone esta franja arriba del canvas,
+   espejando el HUD que asteroids dibuja dentro del suyo. Solo se monta en
+   touch — no existe en desktop. */
+.touch-screen-stats {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5; /* sobre el canvas, debajo del pause-overlay (z-index 10) */
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--cyan);
+  text-shadow: 0 0 6px rgba(var(--cyan-glow), 0.5);
+  pointer-events: none;
+}
+/* Ídem, variante de caida: pila de stats dentro de la columna del panel
+   «SIGUIENTE» (via prop panelExtra de CaidaGame) — sigue siendo contenido
+   dentro de la caja, no markup del shell. */
+.touch-panel-stats {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.touch-panel-stats .hud-stat .v {
+  font-size: 12px;
+}
+/* Con mapeo drag (bloque-buster) no hay gamepad en flujo (el overlay vive
+   dentro del CRT): la fila PAUSA/MODO/SALIR del shell toma el rol de bloque
+   de pie que en los demás juegos cumple .touch-controls (margin-top: auto). */
+.av-player-touch .touch-hud-actions-footer {
+  margin-top: auto;
+}
 @media (max-width: 480px) {
   .touch-dpad {
     grid-template-columns: repeat(3, 42px);
