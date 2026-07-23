@@ -153,7 +153,7 @@ export default function SerpentinaPage() {
           </div>
 
           {/* Canvas dentro del marco CRT */}
-          <div className="crt">
+          <div className="crt crt-serpentina">
             <div className="crt-screen" style={{ borderRadius: 0 }}>
               <SerpentinaGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
               {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
