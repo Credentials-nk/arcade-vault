@@ -71,22 +71,27 @@ ES el shell: su render táctil quedó pixel-idéntico al previo). Estructura
 fija, sin ningún knob de layout por juego:
 
 1. **Caja del display**: `.crt crt-800` → `.crt-screen` (borderRadius 0),
-   con el pause-overlay y — si el mapeo es `drag` — el overlay de arrastre
+   con el pause-overlay y — si `dragOverlay` — el overlay de arrastre real
    DENTRO de la caja; bisel `.crt-bottom` («SEÑAL OK · {título} · CRT-83 ·
    60 HZ · CARGA · 1MB»).
-2. **Gamepad** (`TouchControls`) como hermano debajo de la caja, anclado al
-   pie por `.av-player-touch .touch-controls` (`margin-top: auto`).
-3. **Fila inferior** PAUSA / selector de modo / SALIR
-   (`.touch-hud-actions`). Con mapeo `drag` no hay gamepad en flujo y esta
-   fila toma el ancla al pie (`.touch-hud-actions-footer`).
+2. **Panel Gamepad MK-II** (`.touch-gamepad`, **UNA sola pieza visual**,
+   corrida 3): cruceta + A/B arriba (`TouchControls`) y la fila PAUSA /
+   selector de modo / SALIR integrada como **sección inferior del mismo
+   panel** (`.touch-gamepad-footer`, separada por un divisor sutil) — no un
+   bloque suelto debajo. Todo el panel se ancla al pie con
+   `.av-player-touch .touch-gamepad { margin-top: auto }` y se oculta
+   entero cuando `gameOver`.
 
 **Las DOS únicas variaciones por juego** (props del shell):
 
 - `children` = el contenido del display (lo que se renderea adentro de la
   caja), y
-- `touch` = el mapeo de la botonera (`Omit<TouchControlsProps, 'hidden'>`:
-  botones activos vs `muted`; gamepad vs `drag`). `hidden` lo gobierna el
-  shell con `gameOver`.
+- `touch` = el mapeo de la botonera del panel (`Omit<TouchControlsProps,
+'hidden' | 'drag'>`: botones activos vs `muted`). Nunca incluye `drag`.
+- `dragOverlay?: boolean` = monta ADEMÁS el overlay de arrastre real dentro
+  de la caja (bloque-buster); el panel se muestra igual, con `touch`
+  decorativo (ver `DRAG_DECORATIVE_PAD`, exportado desde
+  `TouchPlayerShell.tsx`).
 - (`title` es solo el texto del bisel — no mueve nada.)
 
 Si una página "necesita algo especial" en el shell, o es un cambio AL shell
@@ -109,8 +114,8 @@ esa página.
 - **asteroids**: canvas 800×600 estirado a `width:100%` × 340px (dibuja
   SCORE/NIVEL/vidas él mismo). Referencia intacta.
 - **bloque-buster**: mismo canvas 800×600, mismo estiramiento → densidad
-  idéntica a la referencia. Dibuja Score/Nivel/vidas él mismo. Mapeo
-  `drag`.
+  idéntica a la referencia. Dibuja Score/Nivel/vidas él mismo. `dragOverlay`
+  (el panel se muestra igual que en los otros 3, decorativo — ver corrida 3).
 - **serpentina**: canvas 600×600 estirado a `width:100%` × 340 (compresión
   ~3%, imperceptible) + franja `.touch-screen-stats` superpuesta arriba
   DENTRO de la caja (PUNTOS/NIVEL — su canvas no los dibuja; espeja el HUD
@@ -135,23 +140,101 @@ original>` en cada página: el desktop quedó intacto por construcción
   reinicia — antes el `.crt` era compartido entre ambos modos y no se
   remontaba.
 - CSS del shell/contenido en `app/globals.css`: `.touch-screen-stats`,
-  `.touch-panel-stats`, `.av-player-touch .touch-hud-actions-footer` (+ el
-  bloque táctil preexistente del spec 11). La fila exterior `.touch-stats`
-  de la corrida 1 se eliminó: violaba el principio (markup fuera de la
-  caja que solo algunas páginas montaban).
+  `.touch-panel-stats` (+ el gamepad MK-II, ver más abajo). La fila
+  exterior `.touch-stats` de la corrida 1 se eliminó: violaba el principio
+  (markup fuera de la caja que solo algunas páginas montaban). La clase
+  `.touch-hud-actions-footer` de la corrida 2 también se eliminó en la
+  corrida 3: dejó de hacer falta al fusionarse la fila de botones dentro
+  del panel único (ver abajo).
+
+## Gamepad MK-II (fijado en corrida 3, 2026-07-22)
+
+Feedback del usuario tras validar el shell de la corrida 2 en su teléfono:
+el shell (tamaños/posiciones) estaba bien, pero pidió restylear el gamepad
+con un diseño de referencia — **material en `references/gamepad-assets/`**
+(`gamepad.html` con el CSS completo, `gamepad-neon.png`, y sobre todo
+`mobile-layout-target.png`: captura real del teléfono del usuario con la
+distribución objetivo — **un único panel redondeado** que integra cruceta +
+A/B y la fila PAUSA/selector/SALIR como sección inferior del mismo panel).
+Mandato textual: **"poner ese gamepad en los 4"**, Bloque Buster incluido.
+
+### Qué cambió
+
+- **`.touch-gamepad`** (nuevo, en `app/globals.css`): el panel único —
+  fondo degradado + borde neón + textura de puntos + doble borde interior,
+  portado 1:1 de `.gp` en `gamepad.html`. Mismo `max-width: 848px` que
+  `.crt-800` para que ambas piezas midan igual. Es el elemento que ahora se
+  ancla al pie (`.av-player-touch .touch-gamepad { margin-top: auto }`,
+  reemplaza al `.touch-controls` de la corrida 2).
+- **Cruceta**: reposicionada en absoluto (antes CSS grid) con hub central y
+  gema LED pulsante (`.touch-dpad-hub`/`.touch-dpad-gem`), flechas SVG
+  (`.touch-dpad-arrow`, triángulos calcados del HTML) en vez de glifos de
+  texto. Efecto de pulsación 3D (`translateY` + glow) en `:active` — no se
+  agregó una clase `.on` con JS nuevo: el `:active` nativo alcanza porque
+  `setPointerCapture` (spec 11, sin tocar) mantiene el estado presionado.
+- **A/B**: círculos con gradiente radial + anillo punteado que aparece al
+  presionar (`.touch-action-ring`), letra pixel grande
+  (`.touch-action-letter`) y **caption opcional** debajo
+  (`.touch-action-caption`, texto chico con la acción real — ver decisión
+  de Caída).
+- **Fila PAUSA/MODO/SALIR**: pasó de bloque suelto (`.touch-hud-actions`)
+  a **sección inferior integrada del mismo panel** (`.touch-gamepad-footer`,
+  con separador sutil `border-top`), calcando
+  `mobile-layout-target.png`. Ya no existe un caso especial para
+  bloque-buster (antes `.touch-hud-actions-footer` la anclaba aparte
+  cuando no había gamepad en flujo) — ahora el panel entero siempre se
+  ancla igual, con o sin `dragOverlay`.
+- **Colores desde variables**: todo el CSS portado usa
+  `var(--cyan)`/`var(--magenta)`/`var(--yellow)` y sus `*-glow` (en rgb,
+  para `rgba(var(--x-glow), a)`) en vez de los hex hardcodeados del HTML de
+  referencia (`#00f5ff`/`#ff006e`). Como cada `[data-skin]` ya sobrescribe
+  esas variables (retro → ámbar monocromo, clásico → sobrio, neon →
+  actual), el panel hereda la skin fija de cada juego sin código adicional.
+  Verificado en captura: asteroids (retro) sale todo ámbar, serpentina
+  (neon) sale cian/magenta, caida (clásico) sale apagado.
+- **Fuentes**: ninguna importación nueva — el HTML de referencia usa
+  Google Fonts (`Press Start 2P`, `JetBrains Mono`) que la app ya trae via
+  `var(--pixel)`/`var(--mono)`; se reusaron esas variables tal cual.
+- **Bloque Buster ahora SIEMPRE muestra el panel completo** (antes tenía un
+  hueco vacío entre display y fila de botones): `touch` recibe
+  `DRAG_DECORATIVE_PAD` (cruceta + A/B `muted`, cero dispatch) y
+  `dragOverlay` monta ADEMÁS el overlay de arrastre real dentro de la caja
+  — dos mecanismos separados y explícitos en `TouchPlayerShellProps`
+  (antes, en la corrida 2, un solo `touch.drag` decidía ambas cosas a la
+  vez, lo cual ya no alcanzaba porque ahora el panel decorativo y el
+  overlay real conviven).
+- **Caída — decisión de etiquetas**: se optó por **A/B + caption** en vez
+  de mantener `ROTAR`/`SOLTAR` como label principal, para no romper la
+  uniformidad del panel (el diseño MK-II usa letra pixel grande, no texto
+  largo) — `{ label: 'B', caption: 'ROTAR', ... }` /
+  `{ label: 'A', caption: 'SOLTAR', ... }`, mismo orden/color que las demás
+  (B=azul=secundaria, A=roja=principal). El caption es texto chico
+  (`.touch-action-caption`, 7px) debajo del círculo; no altera tamaño ni
+  posición del botón, solo agrega una etiqueta descriptiva para que un
+  jugador nuevo no tenga que adivinar qué hace A/B en este juego en
+  particular. Verificado por screenshot: cabe sin recortarse contra el
+  divisor de la fila inferior.
+- Media query de pantallas angostas (`@media (max-width: 380px)`, antes
+  480px) reescrita con los offsets absolutos nuevos (antes usaba
+  `grid-template-columns`, ya no aplica con posicionamiento absoluto).
 
 ### Estado
 
 - **Corrida 1 (2026-07-22): descartada por feedback del usuario** ("se ve
   mal") — alineaba números pero dejaba que cada página armara su propia
   variante del layout (filas de stats exteriores en caida/serpentina).
-- **Corrida 2 (2026-07-22): implementado el shell, pendiente de validación
-  en dispositivo real.** `TouchPlayerShell` consumido por las 4 páginas;
-  `npm run build` verde; screenshots orientativos en
-  `.playwright-screenshots/` a 360×740 y 390×844 (las 4 capturas deben
-  verse idénticas salvo el contenido del display). Si lo que se ve en el
-  teléfono no coincide, ajustar los números de arriba y re-correr el
-  agente.
+- **Corrida 2 (2026-07-22): shell validado en dispositivo real por el
+  usuario.** `TouchPlayerShell` (tamaños/posiciones) quedó fijo como base.
+- **Corrida 3 (2026-07-22): gamepad MK-II implementado, pendiente de
+  validación en dispositivo real.** CSS portado de
+  `references/gamepad-assets/gamepad.html` a `.touch-gamepad`/`.touch-dpad*`
+  /`.touch-action*`/`.touch-gamepad-footer` en `app/globals.css`, con
+  colores desde variables de skin; panel único en los 4 juegos (bloque-buster
+  incluido, decorativo + `dragOverlay`); Caída con A/B + caption. `npm run
+build` verde; screenshots en `.playwright-screenshots/` a 360×740 y
+  390×844. Si lo que se ve en el teléfono no coincide (tamaños de la
+  cruceta/A-B, separación del divisor inferior, legibilidad del caption en
+  Caída), ajustar los números de este bloque y re-correr el agente.
 
 ## Relacionado
 

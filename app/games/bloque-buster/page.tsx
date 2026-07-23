@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import BloqueBusterGame from '@/components/games/bloque-buster/BloqueBusterGame';
-import TouchPlayerShell from '@/components/games/TouchPlayerShell';
+import TouchPlayerShell, { DRAG_DECORATIVE_PAD } from '@/components/games/TouchPlayerShell';
 import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { ArkanoidEngine, ArkanoidCallbacks } from '@/lib/games/bloque-buster/game';
@@ -96,13 +96,16 @@ export default function BloqueBusterPage() {
       data-skin={displayMode}
     >
       {isTouch ? (
-        /* Shell táctil compartido. Mapeo de botonera: drag (la paleta se
-           controla arrastrando sobre el canvas — el shell monta el overlay
-           dentro de la caja y ancla la fila de botones al pie). El canvas ya
-           dibuja Score/Nivel/vidas: el contenido es solo el juego. */
+        /* Shell táctil compartido. La paleta se controla arrastrando sobre
+           el canvas (dragOverlay monta ese overlay real dentro de la caja);
+           el panel de gamepad se muestra igual que en los otros 3 juegos,
+           con cruceta y A/B decorativos (DRAG_DECORATIVE_PAD) — decisión
+           del usuario: "poner ese gamepad en los 4". El canvas ya dibuja
+           Score/Nivel/vidas: el contenido es solo el juego. */
         <TouchPlayerShell
           title="BLOQUE BUSTER"
-          touch={{ drag: true }}
+          touch={DRAG_DECORATIVE_PAD}
+          dragOverlay
           paused={paused}
           gameOver={gameOver}
           onPauseToggle={handlePause}

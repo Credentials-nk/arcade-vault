@@ -104,8 +104,18 @@ export default function CaidaPage() {
             dpadMuted: ['up'],
             dpadRepeat: true,
             actions: [
-              { label: 'ROTAR', synthKey: { code: 'ArrowUp', key: 'ArrowUp' }, color: 'blue' },
-              { label: 'SOLTAR', synthKey: { code: 'Space', key: ' ' }, color: 'red' },
+              {
+                label: 'B',
+                caption: 'ROTAR',
+                synthKey: { code: 'ArrowUp', key: 'ArrowUp' },
+                color: 'blue',
+              },
+              {
+                label: 'A',
+                caption: 'SOLTAR',
+                synthKey: { code: 'Space', key: ' ' },
+                color: 'red',
+              },
             ],
           }}
           paused={paused}

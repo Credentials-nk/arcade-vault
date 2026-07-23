@@ -1629,16 +1629,56 @@ a {
   text-shadow: 0 0 16px var(--cyan);
 }
 
-/* ===== touch controls (spec 11) ===== */
-/* Sin panel envolvente: los controles flotan directo sobre el fondo, debajo del canvas. */
+/* ===== Gamepad MK-II (corrida 3 de @mobile-porter) =====================
+   CSS portado de references/gamepad-assets/gamepad.html — panel único
+   (.touch-gamepad) que integra cruceta + A/B y la fila PAUSA/MODO/SALIR
+   como sección inferior del MISMO panel, calcado de
+   references/gamepad-assets/mobile-layout-target.png. Colores desde
+   var(--cyan)/var(--magenta)/var(--yellow) (y sus *-glow en rgb) en vez de
+   los hex hardcodeados del HTML original, para heredar cada [data-skin]
+   (retro = ámbar monocromo, clásico = sobrio, neon = actual). Se monta en
+   los 4 juegos por igual — ver TouchPlayerShell.tsx. */
+.touch-gamepad {
+  position: relative;
+  width: 100%;
+  max-width: 848px; /* mismo tope que .crt-800, para que ambas piezas midan igual */
+  margin: 16px auto 0;
+  padding: 14px 18px 12px;
+  background: linear-gradient(180deg, #1c1c28 0%, #0c0c14 100%);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  font-family: var(--pixel);
+  box-shadow:
+    0 24px 60px -28px rgba(var(--cyan-glow), 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6);
+}
+.touch-gamepad::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(var(--cyan-glow), 0.14);
+  border-radius: 16px;
+  pointer-events: none;
+}
+.touch-gamepad::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 8px 8px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.6;
+}
 .touch-controls {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 16px;
-  padding: 0 18px;
-  font-family: var(--pixel);
+  padding: 12px 8px 24px;
 }
 .touch-btn {
   touch-action: none;
@@ -1649,97 +1689,242 @@ a {
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: none;
+  border: none;
+  cursor: pointer;
 }
-.touch-btn:active {
-  filter: brightness(1.3);
-}
+
+/* D-pad: cruceta posicionada en absoluto alrededor de un hub central con
+   gema LED pulsante, calcada de .gp-dpad/.dp/.dp-hub del HTML de referencia. */
 .touch-dpad {
-  display: grid;
-  grid-template-columns: repeat(3, 48px);
-  grid-template-rows: repeat(3, 48px);
-  gap: 6px;
-}
-.touch-dpad-up {
-  grid-area: 1 / 2;
-}
-.touch-dpad-left {
-  grid-area: 2 / 1;
-}
-.touch-dpad-right {
-  grid-area: 2 / 3;
-}
-.touch-dpad-down {
-  grid-area: 3 / 2;
+  position: relative;
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
 }
 .touch-dpad-btn {
-  font-size: 15px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #c3ccd6;
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(180deg, #1a1a25, #0a0a12);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 9px;
+  color: var(--ink-dim);
+  box-shadow:
+    0 4px 0 #050507,
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 80ms,
+    box-shadow 140ms,
+    color 140ms,
+    border-color 140ms,
+    background 140ms;
+}
+.touch-dpad-arrow {
+  width: 18px;
+  height: 18px;
+  transition: filter 140ms;
+}
+.touch-dpad-btn:active {
+  transform: translateY(3px);
+  color: var(--cyan);
+  background: linear-gradient(180deg, #08161e, #030a0e);
+  border-color: var(--cyan);
+  box-shadow:
+    0 1px 0 #050507,
+    inset 0 0 16px rgba(var(--cyan-glow), 0.45),
+    0 0 16px rgba(var(--cyan-glow), 0.5);
+}
+.touch-dpad-btn:active .touch-dpad-arrow {
+  filter: drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 12px var(--cyan));
+}
+.touch-dpad-up {
+  top: 0;
+  left: 45px;
+}
+.touch-dpad-down {
+  bottom: 0;
+  left: 45px;
+}
+.touch-dpad-left {
+  left: 0;
+  top: 45px;
+}
+.touch-dpad-right {
+  right: 0;
+  top: 45px;
 }
 .touch-dpad-muted {
   opacity: 0.4; /* presente para completar la cruceta, pero sin efecto en el engine */
 }
+.touch-dpad-hub {
+  position: absolute;
+  top: 45px;
+  left: 45px;
+  width: 42px;
+  height: 42px;
+  background: radial-gradient(circle at 50% 50%, #181822 0%, #08080d 80%);
+  border: 1px solid rgba(var(--cyan-glow), 0.15);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.touch-dpad-gem {
+  width: 10px;
+  height: 10px;
+  background: var(--cyan);
+  box-shadow:
+    0 0 10px var(--cyan),
+    inset 0 0 4px rgba(0, 0, 0, 0.5);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  animation: touch-dpad-pulse 2s ease-in-out infinite;
+}
+@keyframes touch-dpad-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+}
+
+/* A/B: botones circulares con gradiente radial + anillo punteado que se
+   revela al presionar, calcado de .ab/.ab-ring/.ab-letter del HTML de
+   referencia. El color sale de --ab-glow, fijado por cada .touch-action-*. */
 .touch-actions {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
 }
 .touch-action-btn {
+  position: relative;
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  border-color: transparent;
-  /* 8px en vez de 13px: labels largos (ROTAR/SOLTAR en caída) no entran a 13px
-     en un botón circular sin desbordar hacia el vecino — ver A/B de asteroids,
-     que siguen legibles a este tamaño. */
-  font-size: 8px;
-  letter-spacing: 0;
-  font-weight: bold;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  text-align: center;
+  border: 2px solid currentColor;
+  box-shadow:
+    0 6px 0 #050507,
+    0 0 22px var(--ab-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.4);
+  transition:
+    transform 80ms,
+    box-shadow 140ms;
 }
-.touch-action-blue {
-  background: #3d6ea5;
+.touch-action-btn:active {
+  transform: translateY(4px) scale(0.97);
+  box-shadow:
+    0 1px 0 #050507,
+    0 0 36px var(--ab-glow),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
 }
-.touch-action-red {
-  background: #a23b3b;
+.touch-action-btn:active .touch-action-ring {
+  opacity: 1;
+  transform: scale(1.08);
 }
-.touch-action-yellow {
-  background: #a68a2b;
-}
-.touch-action-muted {
-  opacity: 0.6; /* decorativo — paridad visual, sin dispatch real */
+.touch-action-ring {
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1px dashed currentColor;
+  opacity: 0;
+  transition:
+    opacity 140ms,
+    transform 200ms;
   pointer-events: none;
 }
-.touch-hud-actions {
-  margin-top: 34px;
-  justify-content: center;
-  gap: 26px;
+.touch-action-letter {
+  font-family: var(--pixel);
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 8px currentColor,
+    0 0 18px currentColor,
+    0 1px 0 rgba(0, 0, 0, 0.6);
+  position: relative;
+  z-index: 2;
 }
-.touch-hud-actions .btn {
+.touch-action-caption {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--pixel);
+  font-size: 7px;
+  letter-spacing: 0.05em;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+.touch-action-red {
+  color: var(--magenta);
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.25), transparent 50%),
+    radial-gradient(
+      circle at 50% 55%,
+      rgba(var(--magenta-glow), 0.7),
+      rgba(var(--magenta-glow), 0.18) 75%
+    );
+  --ab-glow: rgba(var(--magenta-glow), 0.4);
+}
+.touch-action-blue {
+  color: var(--cyan);
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.25), transparent 50%),
+    radial-gradient(
+      circle at 50% 55%,
+      rgba(var(--cyan-glow), 0.55),
+      rgba(var(--cyan-glow), 0.16) 75%
+    );
+  --ab-glow: rgba(var(--cyan-glow), 0.4);
+}
+.touch-action-yellow {
+  color: var(--yellow);
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.25), transparent 50%),
+    radial-gradient(
+      circle at 50% 55%,
+      rgba(var(--yellow-glow), 0.6),
+      rgba(var(--yellow-glow), 0.16) 75%
+    );
+  --ab-glow: rgba(var(--yellow-glow), 0.4);
+}
+.touch-action-muted {
+  opacity: 0.55; /* decorativo — paridad visual, sin dispatch real */
+  pointer-events: none;
+}
+
+/* Fila PAUSA/MODO/SALIR integrada como sección inferior del MISMO panel
+   (no un bloque suelto del shell) — separador sutil contra la cruceta/A-B. */
+.touch-gamepad-footer {
+  position: relative;
+  z-index: 1;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.touch-gamepad-footer .btn {
   box-shadow: none;
 }
-.touch-hud-actions .btn.yellow {
+.touch-gamepad-footer .btn.yellow {
   background: #7a6a1f;
   border-color: transparent;
   color: #fff;
 }
-.touch-hud-actions .btn.yellow:hover {
+.touch-gamepad-footer .btn.yellow:hover {
   box-shadow: none;
   color: #fff;
 }
-.touch-hud-actions .btn.ghost {
+.touch-gamepad-footer .btn.ghost {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.12);
   color: #aab4c0;
 }
-.touch-hud-actions .btn.ghost:hover {
+.touch-gamepad-footer .btn.ghost:hover {
   box-shadow: none;
 }
 /* Selector de skin (neon/clasico/retro), reemplaza a GAME_SKINS['asteroids']
@@ -1824,7 +2009,7 @@ a {
   flex-direction: column;
   min-height: 100dvh;
 }
-.av-player-touch .touch-controls {
+.av-player-touch .touch-gamepad {
   margin-top: auto;
 }
 /* El canvas se estira más allá de su 4:3 natural (leve distorsión
@@ -1882,21 +2067,38 @@ a {
 .touch-panel-stats .hud-stat .v {
   font-size: 12px;
 }
-/* Con mapeo drag (bloque-buster) no hay gamepad en flujo (el overlay vive
-   dentro del CRT): la fila PAUSA/MODO/SALIR del shell toma el rol de bloque
-   de pie que en los demás juegos cumple .touch-controls (margin-top: auto). */
-.av-player-touch .touch-hud-actions-footer {
-  margin-top: auto;
-}
-@media (max-width: 480px) {
+/* Pantallas muy angostas (~320-360px): el panel MK-II es la misma pieza en
+   los 4 juegos, solo se achica proporcionalmente (mismos offsets relativos
+   entre cruceta/hub, ver .touch-dpad-up/left/right/down/hub más arriba). */
+@media (max-width: 380px) {
   .touch-dpad {
-    grid-template-columns: repeat(3, 42px);
-    grid-template-rows: repeat(3, 42px);
-    gap: 5px;
+    width: 118px;
+    height: 118px;
+  }
+  .touch-dpad-btn {
+    width: 38px;
+    height: 38px;
+  }
+  .touch-dpad-up,
+  .touch-dpad-down {
+    left: 40px;
+  }
+  .touch-dpad-left,
+  .touch-dpad-right {
+    top: 40px;
+  }
+  .touch-dpad-hub {
+    top: 40px;
+    left: 40px;
+    width: 38px;
+    height: 38px;
   }
   .touch-action-btn {
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
+  }
+  .touch-action-letter {
+    font-size: 16px;
   }
 }
 
