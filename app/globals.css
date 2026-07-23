@@ -1082,16 +1082,29 @@ a {
    canvas de cada juego respeta su propia resolución nativa (800px en
    asteroids/bloque-buster) — el .crt-screen queda más ancho que el canvas
    y sobra una franja negra sin dibujar abajo/derecha. Modificador opuesto
-   a nivel de página (no en la clase base .crt) porque serpentina (600px)
-   y caída (tablero+panel «siguiente») tienen anchos nativos distintos. */
+   a nivel de página (no en la clase base .crt) porque cada juego tiene un
+   ancho nativo distinto (caída es la excepción: tablero+panel «siguiente»
+   centrados via flex, no necesita tope propio). */
 .crt-800 {
   max-width: 848px;
   margin: 0 auto;
 }
-/* .crt-screen fija aspect-ratio: 4/3 con overflow: hidden — un canvas de otra
-   proporción queda recortado (le pasa hoy a serpentina, cuadrado 600×600,
-   fuera de alcance de este spec). Frogger es 640×560 (8:7), así que pisa el
-   aspect-ratio en su propio .crt-screen para no recortar la fila de inicio. */
+/* Serpentina: canvas cuadrado 600×600. Sin estos dos, .crt-screen (4:3 por
+   defecto) queda más ancho Y más alto que el canvas — sobra franja negra
+   a la derecha y abajo. */
+.crt-serpentina {
+  max-width: 648px;
+  margin: 0 auto;
+}
+.crt-serpentina .crt-screen {
+  aspect-ratio: 1 / 1;
+}
+/* Frogger: canvas 640×560 (8:7). El aspect-ratio ya evitaba recortar la fila
+   de inicio, pero faltaba el tope de ancho — mismo síntoma que serpentina. */
+.crt-frogger {
+  max-width: 688px;
+  margin: 0 auto;
+}
 .crt-frogger .crt-screen {
   aspect-ratio: 640 / 560;
 }
