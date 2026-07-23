@@ -81,6 +81,10 @@ export class TetrisEngine {
   private colors: (string | null)[];
   private gridLine: string;
   private highlight: string;
+  // Geometría de la rejilla del tablero: nunca cambia (COLS/ROWS/BLOCK son
+  // constantes), así que se teselan las 28 subrutas una sola vez en el
+  // constructor en vez de reemitirlas por frame (patrón P4).
+  private readonly gridPath: Path2D;
 
   private board: Board = [];
   private current!: Piece;
@@ -114,6 +118,7 @@ export class TetrisEngine {
     this.colors = [null, ...skin.pieces];
     this.gridLine = skin.line;
     this.highlight = skin.highlight;
+    this.gridPath = this.buildGridPath();
 
     this.onKeyDown = (e: KeyboardEvent) => this.handleKey(e);
     window.addEventListener('keydown', this.onKeyDown);
@@ -135,6 +140,10 @@ export class TetrisEngine {
     this.paused = paused;
     if (!paused) {
       this.lastTime = null;
+      // Guarda de único dueño del rAF (mismo patrón que init()): cancelar
+      // cualquier frame pendiente antes de agendar uno nuevo evita que una
+      // reanudación duplicada deje dos loops corriendo en paralelo.
+      cancelAnimationFrame(this.rafId);
       this.rafId = requestAnimationFrame(this.loop);
     }
   }
@@ -300,21 +309,27 @@ export class TetrisEngine {
     context.globalAlpha = 1;
   }
 
+  /** Tesela una sola vez las 28 subrutas (verticales + horizontales) de la
+   * rejilla del tablero. Misma geometría exacta que antes se reemitía línea
+   * por línea en cada frame; al no depender de la skin, no hace falta
+   * reconstruirla en setSkin (solo el color de trazo cambia). */
+  private buildGridPath(): Path2D {
+    const path = new Path2D();
+    for (let c = 1; c < COLS; c++) {
+      path.moveTo(c * BLOCK, 0);
+      path.lineTo(c * BLOCK, ROWS * BLOCK);
+    }
+    for (let r = 1; r < ROWS; r++) {
+      path.moveTo(0, r * BLOCK);
+      path.lineTo(COLS * BLOCK, r * BLOCK);
+    }
+    return path;
+  }
+
   private drawGrid(): void {
     this.ctx.strokeStyle = this.gridLine;
     this.ctx.lineWidth = 0.5;
-    for (let c = 1; c < COLS; c++) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(c * BLOCK, 0);
-      this.ctx.lineTo(c * BLOCK, ROWS * BLOCK);
-      this.ctx.stroke();
-    }
-    for (let r = 1; r < ROWS; r++) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(0, r * BLOCK);
-      this.ctx.lineTo(COLS * BLOCK, r * BLOCK);
-      this.ctx.stroke();
-    }
+    this.ctx.stroke(this.gridPath);
   }
 
   private draw(): void {

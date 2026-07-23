@@ -26,6 +26,14 @@ interface Point {
 
 const wrap = (v: number, max: number): number => ((v % max) + max) % max;
 
+// El pulso de la comida cuantiza su alpha a centésimas (ya lo hacía `toFixed(2)`
+// antes de esta caché); precalcular las 101 cadenas rgba(...) posibles evita
+// reconstruir el template string en cada frame de dibujo.
+const ALPHA_STEPS = 101;
+
+const buildFoodAlphaCache = (rgb: string): string[] =>
+  Array.from({ length: ALPHA_STEPS }, (_, i) => `rgba(${rgb}, ${(i / 100).toFixed(2)})`);
+
 const KEY_DIRECTIONS: Record<string, Point> = {
   ArrowUp: { x: 0, y: -1 },
   ArrowDown: { x: 0, y: 1 },
@@ -38,6 +46,7 @@ export class SerpentinaEngine {
   private readonly cb: SerpentinaCallbacks;
   private skin: Skin;
   private foodRgb: string;
+  private foodAlphaCache: string[];
 
   private snake: Point[] = [];
   private direction: Point = { x: 1, y: 0 };
@@ -62,6 +71,7 @@ export class SerpentinaEngine {
     this.cb = cb;
     this.skin = skin;
     this.foodRgb = rgbTriplet(skin.accent);
+    this.foodAlphaCache = buildFoodAlphaCache(this.foodRgb);
 
     window.addEventListener('keydown', this.onKeyDown);
 
@@ -70,6 +80,7 @@ export class SerpentinaEngine {
     this.cb.onScore(0);
     this.cb.onLevel(1);
 
+    cancelAnimationFrame(this.rafId);
     this.rafId = requestAnimationFrame(this.loop);
   }
 
@@ -77,6 +88,7 @@ export class SerpentinaEngine {
     this.paused = paused;
     if (!paused) {
       this.lastTime = null;
+      cancelAnimationFrame(this.rafId);
       this.rafId = requestAnimationFrame(this.loop);
     }
   }
@@ -85,6 +97,7 @@ export class SerpentinaEngine {
   setSkin(skin: Skin): void {
     this.skin = skin;
     this.foodRgb = rgbTriplet(skin.accent);
+    this.foodAlphaCache = buildFoodAlphaCache(this.foodRgb);
   }
 
   destroy(): void {
@@ -173,7 +186,8 @@ export class SerpentinaEngine {
     }
 
     const pulse = 0.7 + Math.sin(performance.now() / 150) * 0.3;
-    ctx.fillStyle = `rgba(${this.foodRgb}, ${pulse.toFixed(2)})`;
+    const alphaIdx = Math.round(pulse * 100);
+    ctx.fillStyle = this.foodAlphaCache[alphaIdx];
     ctx.fillRect(this.food.x * CELL + 2, this.food.y * CELL + 2, CELL - 4, CELL - 4);
   }
 
