@@ -14,9 +14,12 @@ siempre igual. Correcto, no tocar.
 
 El layout **móvil/táctil** (gamepad + tamaño del display) **no** es
 consistente entre juegos. Según el usuario, la distribución correcta —la
-que hay que tomar como referencia— es la de **Asteroids** y **Serpentina**.
-Los otros dos (**Caída**, **Bloque Buster**) se desvían: en algunos el
-display queda más chico, en otros más grande, sin un criterio compartido.
+única que hay que tomar como referencia/base— es la de **Asteroids**:
+ahí se hizo bien tanto el display del juego como el gamepad y los
+botones. Los otros tres (**Caída**, **Serpentina**, **Bloque Buster**)
+**no** son la base — se desviaron al cablearlos y hay que alinearlos a
+Asteroids, no al revés. En algunos el display queda más chico, en otros
+más grande, sin un criterio compartido.
 
 El usuario pidió explícitamente **no corregir esto ahora** — quedó para
 cuando exista el agente `@mobile-porter`.
@@ -46,11 +49,12 @@ cuando exista el agente `@mobile-porter`.
 ## Tarea para `@mobile-porter`
 
 Unificar el criterio de tamaño/densidad del canvas en modo táctil en los 4
-juegos, usando **Asteroids + Serpentina** como referencia de la
-distribución correcta. Confirmar con el usuario en un dispositivo real
-antes de fijar los números definitivos (el entorno de desarrollo de este
-repo no permite emular fielmente un viewport móvil real — ver notas de
-`specs/11-controles-tactiles.md`).
+juegos, usando **únicamente Asteroids** como referencia de la
+distribución correcta (display, gamepad y botones). Caída, Serpentina y
+Bloque Buster deben alinearse a ese patrón, no al revés. Confirmar con
+el usuario en un dispositivo real antes de fijar los números definitivos
+(el entorno de desarrollo de este repo no permite emular fielmente un
+viewport móvil real — ver notas de `specs/11-controles-tactiles.md`).
 
 ## Relacionado
 
