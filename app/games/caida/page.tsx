@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import CaidaGame from '@/components/games/caida/CaidaGame';
-import TouchControls from '@/components/games/TouchControls';
+import TouchPlayerShell from '@/components/games/TouchPlayerShell';
 import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { TetrisEngine, TetrisCallbacks } from '@/lib/games/caida/game';
@@ -92,69 +92,88 @@ export default function CaidaPage() {
       className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}
       data-skin={displayMode}
     >
-      {/* HUD exterior */}
-      {!isTouch && (
-        <div className="player-hud">
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-            <div className="hud-stat">
-              <div className="l">Jugador</div>
-              <div className="v" style={{ color: 'var(--ink)' }}>
-                INVITADO
+      {isTouch ? (
+        /* Shell táctil compartido. Contenido del display: tablero por altura
+           (340px, sin distorsión) + panel «SIGUIENTE» al costado, con las
+           stats (puntuación/líneas/nivel) DENTRO de la caja, bajo el panel —
+           el canvas de Caída no las dibuja y el player-hud está oculto. */
+        <TouchPlayerShell
+          title="CAÍDA"
+          touch={{
+            dpad: ['up', 'left', 'right', 'down'],
+            dpadMuted: ['up'],
+            dpadRepeat: true,
+            actions: [
+              {
+                label: 'B',
+                caption: 'ROTAR',
+                synthKey: { code: 'ArrowUp', key: 'ArrowUp' },
+                color: 'blue',
+              },
+              {
+                label: 'A',
+                caption: 'SOLTAR',
+                synthKey: { code: 'Space', key: ' ' },
+                color: 'red',
+              },
+            ],
+          }}
+          paused={paused}
+          gameOver={gameOver}
+          onPauseToggle={togglePause}
+          onExit={handleExit}
+          displayMode={displayMode}
+          onDisplayModeChange={setDisplayMode}
+        >
+          <CaidaGame
+            key={gameKey}
+            callbacks={callbacks}
+            engineRef={engineRef}
+            heightPx={340}
+            panelExtra={
+              <div className="touch-panel-stats">
+                <div className="hud-stat">
+                  <div className="l">Puntos</div>
+                  <div className="v">{score.toLocaleString('es-ES')}</div>
+                </div>
+                <div className="hud-stat">
+                  <div className="l">Líneas</div>
+                  <div className="v">{lines}</div>
+                </div>
+                <div className="hud-stat level">
+                  <div className="l">Nivel</div>
+                  <div className="v">{String(level).padStart(2, '0')}</div>
+                </div>
+              </div>
+            }
+          />
+        </TouchPlayerShell>
+      ) : (
+        <>
+          {/* HUD exterior (desktop) */}
+          <div className="player-hud">
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <div className="hud-stat">
+                <div className="l">Jugador</div>
+                <div className="v" style={{ color: 'var(--ink)' }}>
+                  INVITADO
+                </div>
+              </div>
+              <div className="hud-stat">
+                <div className="l">Puntuación</div>
+                <div className="v">{score.toLocaleString('es-ES')}</div>
+              </div>
+              <div className="hud-stat">
+                <div className="l">Líneas</div>
+                <div className="v">{lines}</div>
+              </div>
+              <div className="hud-stat level">
+                <div className="l">Nivel</div>
+                <div className="v">{String(level).padStart(2, '0')}</div>
               </div>
             </div>
-            <div className="hud-stat">
-              <div className="l">Puntuación</div>
-              <div className="v">{score.toLocaleString('es-ES')}</div>
-            </div>
-            <div className="hud-stat">
-              <div className="l">Líneas</div>
-              <div className="v">{lines}</div>
-            </div>
-            <div className="hud-stat level">
-              <div className="l">Nivel</div>
-              <div className="v">{String(level).padStart(2, '0')}</div>
-            </div>
-          </div>
-          <div className="hud-actions">
-            <button className="btn yellow" onClick={togglePause} disabled={gameOver}>
-              {paused ? 'REANUDAR' : 'PAUSA'}
-            </button>
-            <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
-            <button className="btn ghost" onClick={handleExit}>
-              SALIR
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Canvas dentro del marco CRT */}
-      <div className="crt">
-        <div className="crt-screen" style={{ borderRadius: 0 }}>
-          <CaidaGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
-          {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
-        </div>
-        <div className="crt-bottom">
-          <span className="led">SEÑAL OK</span>
-          <span>CAÍDA · CRT-83 · 60 HZ</span>
-          <span>CARGA · 1MB</span>
-        </div>
-      </div>
-
-      {isTouch && (
-        <>
-          <TouchControls
-            dpad={['up', 'left', 'right', 'down']}
-            dpadMuted={['up']}
-            dpadRepeat
-            actions={[
-              { label: 'ROTAR', synthKey: { code: 'ArrowUp', key: 'ArrowUp' }, color: 'blue' },
-              { label: 'SOLTAR', synthKey: { code: 'Space', key: ' ' }, color: 'red' },
-            ]}
-            hidden={gameOver}
-          />
-          {!gameOver && (
-            <div className="hud-actions touch-hud-actions">
-              <button className="btn yellow" onClick={togglePause}>
+            <div className="hud-actions">
+              <button className="btn yellow" onClick={togglePause} disabled={gameOver}>
                 {paused ? 'REANUDAR' : 'PAUSA'}
               </button>
               <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
@@ -162,7 +181,20 @@ export default function CaidaPage() {
                 SALIR
               </button>
             </div>
-          )}
+          </div>
+
+          {/* Canvas dentro del marco CRT */}
+          <div className="crt">
+            <div className="crt-screen" style={{ borderRadius: 0 }}>
+              <CaidaGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
+              {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
+            </div>
+            <div className="crt-bottom">
+              <span className="led">SEÑAL OK</span>
+              <span>CAÍDA · CRT-83 · 60 HZ</span>
+              <span>CARGA · 1MB</span>
+            </div>
+          </div>
         </>
       )}
 

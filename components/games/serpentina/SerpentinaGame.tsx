@@ -7,9 +7,10 @@ import { getSkin } from '@/lib/skins';
 interface SerpentinaGameProps {
   callbacks: SerpentinaCallbacks;
   engineRef: React.MutableRefObject<SerpentinaEngine | null>;
+  heightPx?: number; // override de altura (criterio táctil unificado — ver references/mobile-porter-todo.md)
 }
 
-export default function SerpentinaGame({ callbacks, engineRef }: SerpentinaGameProps) {
+export default function SerpentinaGame({ callbacks, engineRef, heightPx }: SerpentinaGameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -31,7 +32,12 @@ export default function SerpentinaGame({ callbacks, engineRef }: SerpentinaGameP
       ref={canvasRef}
       width={600}
       height={600}
-      style={{ width: '100%', height: 'auto', maxWidth: '600px', display: 'block' }}
+      style={{
+        width: '100%',
+        height: heightPx ? `${heightPx}px` : 'auto',
+        maxWidth: '600px',
+        display: 'block',
+      }}
     />
   );
 }

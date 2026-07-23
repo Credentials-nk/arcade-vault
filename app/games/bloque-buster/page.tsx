@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import BloqueBusterGame from '@/components/games/bloque-buster/BloqueBusterGame';
-import TouchControls from '@/components/games/TouchControls';
+import TouchPlayerShell, { DRAG_DECORATIVE_PAD } from '@/components/games/TouchPlayerShell';
 import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { ArkanoidEngine, ArkanoidCallbacks } from '@/lib/games/bloque-buster/game';
@@ -95,65 +95,79 @@ export default function BloqueBusterPage() {
       className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}
       data-skin={displayMode}
     >
-      {/* HUD exterior */}
-      {!isTouch && (
-        <div className="player-hud">
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-            <div className="hud-stat">
-              <div className="l">Jugador</div>
-              <div className="v" style={{ color: 'var(--ink)' }}>
-                INVITADO
+      {isTouch ? (
+        /* Shell táctil compartido. La paleta se controla arrastrando sobre
+           el canvas (dragOverlay monta ese overlay real dentro de la caja);
+           el panel de gamepad se muestra igual que en los otros 3 juegos,
+           con cruceta y A/B decorativos (DRAG_DECORATIVE_PAD) — decisión
+           del usuario: "poner ese gamepad en los 4". El canvas ya dibuja
+           Score/Nivel/vidas: el contenido es solo el juego. */
+        <TouchPlayerShell
+          title="BLOQUE BUSTER"
+          touch={DRAG_DECORATIVE_PAD}
+          dragOverlay
+          paused={paused}
+          gameOver={gameOver}
+          onPauseToggle={handlePause}
+          onExit={handleExit}
+          displayMode={displayMode}
+          onDisplayModeChange={setDisplayMode}
+        >
+          <BloqueBusterGame
+            key={gameKey}
+            callbacks={callbacks}
+            engineRef={engineRef}
+            heightPx={340}
+          />
+        </TouchPlayerShell>
+      ) : (
+        <>
+          {/* HUD exterior (desktop) */}
+          <div className="player-hud">
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <div className="hud-stat">
+                <div className="l">Jugador</div>
+                <div className="v" style={{ color: 'var(--ink)' }}>
+                  INVITADO
+                </div>
+              </div>
+              <div className="hud-stat">
+                <div className="l">Puntuación</div>
+                <div className="v">{score.toLocaleString('es-ES')}</div>
+              </div>
+              <div className="hud-stat lives">
+                <div className="l">Vidas</div>
+                <div className="v">{'♥ '.repeat(Math.max(0, lives)).trim() || '—'}</div>
+              </div>
+              <div className="hud-stat level">
+                <div className="l">Nivel</div>
+                <div className="v">{String(level).padStart(2, '0')}</div>
               </div>
             </div>
-            <div className="hud-stat">
-              <div className="l">Puntuación</div>
-              <div className="v">{score.toLocaleString('es-ES')}</div>
-            </div>
-            <div className="hud-stat lives">
-              <div className="l">Vidas</div>
-              <div className="v">{'♥ '.repeat(Math.max(0, lives)).trim() || '—'}</div>
-            </div>
-            <div className="hud-stat level">
-              <div className="l">Nivel</div>
-              <div className="v">{String(level).padStart(2, '0')}</div>
+            <div className="hud-actions">
+              <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
+                {paused ? 'REANUDAR' : 'PAUSA'}
+              </button>
+              <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
+              <button className="btn ghost" onClick={handleExit}>
+                SALIR
+              </button>
             </div>
           </div>
-          <div className="hud-actions">
-            <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
-              {paused ? 'REANUDAR' : 'PAUSA'}
-            </button>
-            <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
-            <button className="btn ghost" onClick={handleExit}>
-              SALIR
-            </button>
+
+          {/* Canvas dentro del marco CRT */}
+          <div className="crt crt-800">
+            <div className="crt-screen" style={{ borderRadius: 0 }}>
+              <BloqueBusterGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
+              {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
+            </div>
+            <div className="crt-bottom">
+              <span className="led">SEÑAL OK</span>
+              <span>BLOQUE BUSTER · CRT-83 · 60 HZ</span>
+              <span>CARGA · 1MB</span>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Canvas dentro del marco CRT */}
-      <div className="crt crt-800">
-        <div className="crt-screen" style={{ borderRadius: 0 }}>
-          <BloqueBusterGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
-          {isTouch && <TouchControls drag hidden={gameOver} />}
-          {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
-        </div>
-        <div className="crt-bottom">
-          <span className="led">SEÑAL OK</span>
-          <span>BLOQUE BUSTER · CRT-83 · 60 HZ</span>
-          <span>CARGA · 1MB</span>
-        </div>
-      </div>
-
-      {isTouch && !gameOver && (
-        <div className="hud-actions touch-hud-actions">
-          <button className="btn yellow" onClick={handlePause}>
-            {paused ? 'REANUDAR' : 'PAUSA'}
-          </button>
-          <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
-          <button className="btn ghost" onClick={handleExit}>
-            SALIR
-          </button>
-        </div>
+        </>
       )}
 
       {/* Modal Game Over / Victoria */}

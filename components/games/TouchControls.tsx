@@ -12,7 +12,8 @@ export interface SyntheticKey {
 export type ActionColor = 'red' | 'yellow' | 'blue';
 
 export interface TouchAction {
-  label: string; // ej. 'A', 'B', 'ROTAR'
+  label: string; // letra grande del botón, estilo MK-II (ej. 'A', 'B')
+  caption?: string; // acción real como texto chico bajo la letra (ej. 'ROTAR') — no altera tamaño ni posición del botón
   synthKey?: SyntheticKey; // omitido si muted
   repeat?: boolean; // re-despacha keydown en press-and-hold
   muted?: boolean; // decorativo, sin dispatch — paridad visual con un gamepad de 2 botones
@@ -21,7 +22,7 @@ export interface TouchAction {
 
 export interface TouchControlsProps {
   dpad?: Dir[]; // direcciones visibles; omitido = sin cruceta
-  dpadMuted?: Dir[]; // direcciones presentes pero sin efecto en el engine (ej. 'down' en asteroids) — se muestran atenuadas
+  dpadMuted?: Dir[]; // direcciones presentes pero decorativas (atenuadas, sin dispatch)
   dpadRepeat?: boolean; // caida: true
   actions?: TouchAction[];
   drag?: boolean; // bloque-buster: overlay de arrastre
@@ -38,12 +39,21 @@ const DIR_KEYS: Record<Dir, SyntheticKey> = {
   right: { code: 'ArrowRight', key: 'ArrowRight' },
 };
 
-const DIR_GLYPHS: Record<Dir, string> = {
-  up: '▲',
-  down: '▼',
-  left: '◀',
-  right: '▶',
+/* Flechas del D-pad MK-II (triángulos SVG, ver references/gamepad-assets/gamepad.html) */
+const DIR_ARROWS: Record<Dir, string> = {
+  up: 'M12 4 L20 16 L4 16 Z',
+  right: 'M8 4 L20 12 L8 20 Z',
+  down: 'M4 8 L20 8 L12 20 Z',
+  left: 'M16 4 L16 20 L4 12 Z',
 };
+
+function DirArrow({ dir }: { dir: Dir }) {
+  return (
+    <svg className="touch-dpad-arrow" viewBox="0 0 24 24" aria-hidden="true">
+      <path d={DIR_ARROWS[dir]} fill="currentColor" />
+    </svg>
+  );
+}
 
 function dispatchKey(type: 'keydown' | 'keyup', k: SyntheticKey) {
   window.dispatchEvent(new KeyboardEvent(type, { code: k.code, key: k.key, bubbles: true }));
@@ -57,15 +67,17 @@ function dispatchKey(type: 'keydown' | 'keyup', k: SyntheticKey) {
  * acción funcionan en simultáneo).
  */
 function TouchButton({
-  label,
+  children,
   synthKey,
   repeat,
   className,
+  ariaLabel,
 }: {
-  label: string;
+  children: React.ReactNode;
   synthKey: SyntheticKey;
   repeat?: boolean;
   className: string;
+  ariaLabel?: string;
 }) {
   const pressedRef = useRef(false);
   const delayRef = useRef<number | null>(null);
@@ -119,12 +131,13 @@ function TouchButton({
     <button
       type="button"
       className={className}
+      aria-label={ariaLabel}
       onPointerDown={press}
       onPointerUp={release}
       onPointerCancel={release}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {label}
+      {children}
     </button>
   );
 }
@@ -151,11 +164,26 @@ function DragLayer() {
   );
 }
 
+/* Contenido interno de un botón de acción MK-II: anillo punteado (visible al
+   presionar), letra pixel grande y caption opcional con la acción real. */
+function ActionContent({ action }: { action: TouchAction }) {
+  return (
+    <>
+      <span className="touch-action-ring" aria-hidden="true" />
+      <span className="touch-action-letter">{action.label}</span>
+      {action.caption && <span className="touch-action-caption">{action.caption}</span>}
+    </>
+  );
+}
+
 /**
- * Gamepad virtual táctil (spec 11). Renderizarlo solo cuando
- * useTouchDevice() es true; `hidden` lo oculta durante el modal
- * de game over. No toca los engines: solo despacha eventos
- * sintéticos que los listeners existentes ya entienden.
+ * Cuerpo del gamepad virtual táctil (spec 11), estilo MK-II (corrida 3 de
+ * @mobile-porter — CSS portado de references/gamepad-assets/gamepad.html):
+ * cruceta posicionada con hub central y gema LED a la izquierda, botones
+ * A/B circulares a la derecha. Solo cambió la presentación: el dispatch de
+ * eventos sintéticos, el pointer capture y el auto-repeat son los mismos
+ * del spec 11 y no tocan los engines. Vive dentro del panel .touch-gamepad
+ * que arma TouchPlayerShell.
  */
 export default function TouchControls({
   dpad,
@@ -176,12 +204,17 @@ export default function TouchControls({
           {dpad.map((dir) => (
             <TouchButton
               key={dir}
-              label={DIR_GLYPHS[dir]}
               synthKey={DIR_KEYS[dir]}
               repeat={dpadRepeat}
+              ariaLabel={dir}
               className={`touch-btn touch-dpad-btn touch-dpad-${dir}${dpadMuted?.includes(dir) ? ' touch-dpad-muted' : ''}`}
-            />
+            >
+              <DirArrow dir={dir} />
+            </TouchButton>
           ))}
+          <div className="touch-dpad-hub" aria-hidden="true">
+            <span className="touch-dpad-gem" />
+          </div>
         </div>
       )}
       {actions && actions.length > 0 && (
@@ -193,16 +226,18 @@ export default function TouchControls({
                 className={`touch-btn touch-action-btn touch-action-${a.color ?? 'red'} touch-action-muted`}
                 aria-hidden="true"
               >
-                {a.label}
+                <ActionContent action={a} />
               </div>
             ) : (
               <TouchButton
                 key={a.label}
-                label={a.label}
                 synthKey={a.synthKey}
                 repeat={a.repeat}
+                ariaLabel={a.caption ?? a.label}
                 className={`touch-btn touch-action-btn touch-action-${a.color ?? 'red'}`}
-              />
+              >
+                <ActionContent action={a} />
+              </TouchButton>
             )
           )}
         </div>

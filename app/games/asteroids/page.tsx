@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import AsteroidsGame from '@/components/games/asteroids/AsteroidsGame';
-import TouchControls from '@/components/games/TouchControls';
+import TouchPlayerShell from '@/components/games/TouchPlayerShell';
 import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { AsteroidsEngine, AsteroidsCallbacks } from '@/lib/games/asteroids/game';
@@ -84,73 +84,54 @@ export default function AsteroidsPage() {
       className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}
       data-skin={displayMode}
     >
-      {/* HUD exterior — oculto en touch: el canvas de Asteroids ya dibuja SCORE/NIVEL/vidas */}
-      {!isTouch && (
-        <div className="player-hud">
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-            <div className="hud-stat">
-              <div className="l">Jugador</div>
-              <div className="v" style={{ color: 'var(--ink)' }}>
-                INVITADO
-              </div>
-            </div>
-            <div className="hud-stat">
-              <div className="l">Puntuación</div>
-              <div className="v">{score.toLocaleString('es-ES')}</div>
-            </div>
-            <div className="hud-stat lives">
-              <div className="l">Vidas</div>
-              <div className="v">{'♥ '.repeat(Math.max(0, lives)).trim() || '—'}</div>
-            </div>
-            <div className="hud-stat level">
-              <div className="l">Nivel</div>
-              <div className="v">{String(level).padStart(2, '0')}</div>
-            </div>
-          </div>
-          <div className="hud-actions">
-            <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
-              {paused ? 'REANUDAR' : 'PAUSA'}
-            </button>
-            <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
-            <button className="btn ghost" onClick={handleExit}>
-              SALIR
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Canvas dentro del marco CRT */}
-      <div className="crt crt-800">
-        <div className="crt-screen" style={{ borderRadius: 0 }}>
-          <AsteroidsGame
-            key={gameKey}
-            callbacks={callbacks}
-            engineRef={engineRef}
-            heightPx={isTouch ? 340 : undefined}
-          />
-          {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
-        </div>
-        <div className="crt-bottom">
-          <span className="led">SEÑAL OK</span>
-          <span>ASTEROIDS · CRT-83 · 60 HZ</span>
-          <span>CARGA · 1MB</span>
-        </div>
-      </div>
-
-      {isTouch && (
-        <>
-          <TouchControls
-            dpad={['up', 'left', 'right', 'down']}
-            dpadMuted={['down']}
-            actions={[
+      {isTouch ? (
+        /* Shell táctil compartido — Asteroids ES el shell: el canvas dibuja
+           SCORE/NIVEL/vidas, así que su contenido es solo el juego */
+        <TouchPlayerShell
+          title="ASTEROIDS"
+          touch={{
+            dpad: ['up', 'left', 'right', 'down'],
+            dpadMuted: ['down'],
+            actions: [
               { label: 'B', muted: true, color: 'blue' },
               { label: 'A', synthKey: { code: 'Space', key: ' ' }, color: 'red' },
-            ]}
-            hidden={gameOver}
-          />
-          {!gameOver && (
-            <div className="hud-actions touch-hud-actions">
-              <button className="btn yellow" onClick={handlePause}>
+            ],
+          }}
+          paused={paused}
+          gameOver={gameOver}
+          onPauseToggle={handlePause}
+          onExit={handleExit}
+          displayMode={displayMode}
+          onDisplayModeChange={setDisplayMode}
+        >
+          <AsteroidsGame key={gameKey} callbacks={callbacks} engineRef={engineRef} heightPx={340} />
+        </TouchPlayerShell>
+      ) : (
+        <>
+          {/* HUD exterior (desktop) */}
+          <div className="player-hud">
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              <div className="hud-stat">
+                <div className="l">Jugador</div>
+                <div className="v" style={{ color: 'var(--ink)' }}>
+                  INVITADO
+                </div>
+              </div>
+              <div className="hud-stat">
+                <div className="l">Puntuación</div>
+                <div className="v">{score.toLocaleString('es-ES')}</div>
+              </div>
+              <div className="hud-stat lives">
+                <div className="l">Vidas</div>
+                <div className="v">{'♥ '.repeat(Math.max(0, lives)).trim() || '—'}</div>
+              </div>
+              <div className="hud-stat level">
+                <div className="l">Nivel</div>
+                <div className="v">{String(level).padStart(2, '0')}</div>
+              </div>
+            </div>
+            <div className="hud-actions">
+              <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
                 {paused ? 'REANUDAR' : 'PAUSA'}
               </button>
               <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
@@ -158,7 +139,20 @@ export default function AsteroidsPage() {
                 SALIR
               </button>
             </div>
-          )}
+          </div>
+
+          {/* Canvas dentro del marco CRT */}
+          <div className="crt crt-800">
+            <div className="crt-screen" style={{ borderRadius: 0 }}>
+              <AsteroidsGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
+              {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
+            </div>
+            <div className="crt-bottom">
+              <span className="led">SEÑAL OK</span>
+              <span>ASTEROIDS · CRT-83 · 60 HZ</span>
+              <span>CARGA · 1MB</span>
+            </div>
+          </div>
         </>
       )}
 
