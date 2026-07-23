@@ -75,7 +75,9 @@ export const RETRO: Skin = {
   text: '#ffd591',
 };
 
-const SKINS: Record<SkinName, Skin> = {
+/** Mapa nombre → paleta. Exportado para el selector de modo visual (touch/desktop),
+ * que necesita resolver skins por nombre en vez de por juego. */
+export const SKINS: Record<SkinName, Skin> = {
   neon: NEON,
   clasico: CLASICO,
   retro: RETRO,

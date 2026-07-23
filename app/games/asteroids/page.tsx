@@ -4,14 +4,11 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import AsteroidsGame from '@/components/games/asteroids/AsteroidsGame';
 import TouchControls from '@/components/games/TouchControls';
+import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { AsteroidsEngine, AsteroidsCallbacks } from '@/lib/games/asteroids/game';
 import { saveScore } from '@/app/actions/saveScore';
-import { GAME_SKINS, NEON, CLASICO, RETRO, type Skin, type SkinName } from '@/lib/skins';
-
-const TOUCH_SKINS: Record<SkinName, Skin> = { neon: NEON, clasico: CLASICO, retro: RETRO };
-const MODE_LABELS: Record<SkinName, string> = { neon: 'NEON', clasico: 'CLASSIC', retro: 'RETRO' };
-const MODE_ORDER: SkinName[] = ['neon', 'clasico', 'retro'];
+import { GAME_SKINS, SKINS, type SkinName } from '@/lib/skins';
 
 export default function AsteroidsPage() {
   const router = useRouter();
@@ -29,28 +26,14 @@ export default function AsteroidsPage() {
   const [saveError, setSaveError] = useState('');
   const [gameKey, setGameKey] = useState(0);
   const [displayMode, setDisplayMode] = useState<SkinName>(GAME_SKINS['asteroids']);
-  const [modeMenuOpen, setModeMenuOpen] = useState(false);
-  const [modeMenuUpward, setModeMenuUpward] = useState(true);
-  const modeDropdownRef = useRef<HTMLDivElement>(null);
 
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (!modeMenuOpen) return;
-    function onClickOutside(e: MouseEvent) {
-      if (!modeDropdownRef.current?.contains(e.target as Node)) {
-        setModeMenuOpen(false);
-      }
-    }
-    document.addEventListener('pointerdown', onClickOutside);
-    return () => document.removeEventListener('pointerdown', onClickOutside);
-  }, [modeMenuOpen]);
 
   // El selector de modo reemplaza a GAME_SKINS['asteroids'] como fuente de
   // verdad de la skin activa (arranca en la canónica) y la aplica en caliente
   // tanto al canvas (engine.setSkin) como al chrome (data-skin más abajo).
   useEffect(() => {
-    engineRef.current?.setSkin(TOUCH_SKINS[displayMode]);
+    engineRef.current?.setSkin(SKINS[displayMode]);
   }, [displayMode, gameKey]);
 
   const callbacks: AsteroidsCallbacks = {
@@ -96,57 +79,6 @@ export default function AsteroidsPage() {
     });
   }
 
-  const modeDropdown = (
-    <div className="mode-dropdown" ref={modeDropdownRef}>
-      <button
-        type="button"
-        className="mode-dropdown-trigger"
-        aria-haspopup="listbox"
-        aria-expanded={modeMenuOpen}
-        aria-label="Modo visual"
-        onClick={() => {
-          setModeMenuOpen((open) => {
-            const next = !open;
-            if (next) {
-              // Elige el lado con más espacio libre: en touch el botón vive
-              // pegado al footer (abre arriba); en desktop vive pegado al
-              // header (abre abajo).
-              const rect = modeDropdownRef.current?.getBoundingClientRect();
-              const spaceAbove = rect?.top ?? 0;
-              const spaceBelow = rect ? window.innerHeight - rect.bottom : 0;
-              setModeMenuUpward(spaceAbove > spaceBelow);
-            }
-            return next;
-          });
-        }}
-      >
-        {MODE_LABELS[displayMode]} {modeMenuUpward ? '▲' : '▼'}
-      </button>
-      {modeMenuOpen && (
-        <ul
-          className={`mode-dropdown-list${modeMenuUpward ? '' : ' mode-dropdown-list-down'}`}
-          role="listbox"
-        >
-          {MODE_ORDER.map((mode) => (
-            <li key={mode}>
-              <button
-                type="button"
-                role="option"
-                aria-selected={displayMode === mode}
-                onClick={() => {
-                  setDisplayMode(mode);
-                  setModeMenuOpen(false);
-                }}
-              >
-                {MODE_LABELS[mode]}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-
   return (
     <div
       className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}
@@ -179,7 +111,7 @@ export default function AsteroidsPage() {
             <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
               {paused ? 'REANUDAR' : 'PAUSA'}
             </button>
-            {modeDropdown}
+            <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
             <button className="btn ghost" onClick={handleExit}>
               SALIR
             </button>
@@ -221,7 +153,7 @@ export default function AsteroidsPage() {
               <button className="btn yellow" onClick={handlePause}>
                 {paused ? 'REANUDAR' : 'PAUSA'}
               </button>
-              {modeDropdown}
+              <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
               <button className="btn ghost" onClick={handleExit}>
                 SALIR
               </button>
