@@ -36,8 +36,8 @@ const KEY_DIRECTIONS: Record<string, Point> = {
 export class SerpentinaEngine {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly cb: SerpentinaCallbacks;
-  private readonly skin: Skin;
-  private readonly foodRgb: string;
+  private skin: Skin;
+  private foodRgb: string;
 
   private snake: Point[] = [];
   private direction: Point = { x: 1, y: 0 };
@@ -79,6 +79,12 @@ export class SerpentinaEngine {
       this.lastTime = null;
       this.rafId = requestAnimationFrame(this.loop);
     }
+  }
+
+  /** Recalcula la paleta de render a partir de una nueva skin, en caliente (sin reiniciar la partida). */
+  setSkin(skin: Skin): void {
+    this.skin = skin;
+    this.foodRgb = rgbTriplet(skin.accent);
   }
 
   destroy(): void {

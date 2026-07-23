@@ -3,13 +3,17 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import SerpentinaGame from '@/components/games/serpentina/SerpentinaGame';
+import TouchControls from '@/components/games/TouchControls';
+import SkinModeSelect from '@/components/games/SkinModeSelect';
+import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { SerpentinaEngine, SerpentinaCallbacks } from '@/lib/games/serpentina/game';
 import { saveScore } from '@/app/actions/saveScore';
-import { GAME_SKINS } from '@/lib/skins';
+import { GAME_SKINS, SKINS, type SkinName } from '@/lib/skins';
 
 export default function SerpentinaPage() {
   const router = useRouter();
   const engineRef = useRef<SerpentinaEngine | null>(null);
+  const isTouch = useTouchDevice();
 
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(1);
@@ -20,8 +24,13 @@ export default function SerpentinaPage() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [gameKey, setGameKey] = useState(0);
+  const [displayMode, setDisplayMode] = useState<SkinName>(GAME_SKINS['serpentina']);
 
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    engineRef.current?.setSkin(SKINS[displayMode]);
+  }, [displayMode, gameKey]);
 
   const callbacks: SerpentinaCallbacks = {
     onScore: setScore,
@@ -53,10 +62,6 @@ export default function SerpentinaPage() {
     router.push('/library');
   }
 
-  function handleBack() {
-    router.push('/game/serpentina');
-  }
-
   function handleRestart() {
     setGameOver(false);
     setSaved(false);
@@ -80,37 +85,40 @@ export default function SerpentinaPage() {
   }
 
   return (
-    <div className="av-player fade-in" data-skin={GAME_SKINS['serpentina']}>
-      {/* HUD exterior */}
-      <div className="player-hud">
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-          <div className="hud-stat">
-            <div className="l">Jugador</div>
-            <div className="v" style={{ color: 'var(--ink)' }}>
-              INVITADO
+    <div
+      className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}
+      data-skin={displayMode}
+    >
+      {/* HUD exterior — oculto en touch: el canvas de Serpentina ya dibuja el juego */}
+      {!isTouch && (
+        <div className="player-hud">
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            <div className="hud-stat">
+              <div className="l">Jugador</div>
+              <div className="v" style={{ color: 'var(--ink)' }}>
+                INVITADO
+              </div>
+            </div>
+            <div className="hud-stat">
+              <div className="l">Puntuación</div>
+              <div className="v">{score.toLocaleString('es-ES')}</div>
+            </div>
+            <div className="hud-stat level">
+              <div className="l">Nivel</div>
+              <div className="v">{String(level).padStart(2, '0')}</div>
             </div>
           </div>
-          <div className="hud-stat">
-            <div className="l">Puntuación</div>
-            <div className="v">{score.toLocaleString('es-ES')}</div>
-          </div>
-          <div className="hud-stat level">
-            <div className="l">Nivel</div>
-            <div className="v">{String(level).padStart(2, '0')}</div>
+          <div className="hud-actions">
+            <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
+              {paused ? 'REANUDAR' : 'PAUSA'}
+            </button>
+            <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
+            <button className="btn ghost" onClick={handleExit}>
+              SALIR
+            </button>
           </div>
         </div>
-        <div className="hud-actions">
-          <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
-            {paused ? 'REANUDAR' : 'PAUSA'}
-          </button>
-          <button className="btn ghost" onClick={handleBack}>
-            ATRÁS
-          </button>
-          <button className="btn ghost" onClick={handleExit}>
-            SALIR
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Canvas dentro del marco CRT */}
       <div className="crt">
@@ -124,6 +132,23 @@ export default function SerpentinaPage() {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+
+      {isTouch && (
+        <>
+          <TouchControls dpad={['up', 'left', 'right', 'down']} hidden={gameOver} />
+          {!gameOver && (
+            <div className="hud-actions touch-hud-actions">
+              <button className="btn yellow" onClick={handlePause}>
+                {paused ? 'REANUDAR' : 'PAUSA'}
+              </button>
+              <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
+              <button className="btn ghost" onClick={handleExit}>
+                SALIR
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Modal Game Over */}
       {gameOver && (
