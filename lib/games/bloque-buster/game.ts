@@ -254,9 +254,9 @@ export class ArkanoidEngine {
 
   // Paleta de la skin: el spritesheet (bloques/paddle/pelota) no se toca, solo el
   // fondo del canvas y el texto de HUD/overlay que hoy se dibuja con fillStyle.
-  private readonly bg: string;
-  private readonly bgRgb: string;
-  private readonly hudText: string;
+  private bg: string;
+  private bgRgb: string;
+  private hudText: string;
 
   private paddle: Rect = { x: 0, y: 560, w: 81, h: 14 };
   private ball: Ball = { x: 0, y: 0, w: 16, h: 16, vx: BASE_BALL_VX, vy: BASE_BALL_VY };
@@ -311,6 +311,13 @@ export class ArkanoidEngine {
       this.lastTime = null;
       this.rafId = requestAnimationFrame(this.loop);
     }
+  }
+
+  /** Recalcula la paleta de render a partir de una nueva skin, en caliente (sin reiniciar la partida). */
+  setSkin(skin: Skin): void {
+    this.bg = skin.bg;
+    this.bgRgb = rgbTriplet(skin.bg);
+    this.hudText = skin.text;
   }
 
   destroy(): void {
