@@ -1,6 +1,6 @@
 # SPEC 11 — Controles táctiles móviles para los juegos
 
-> **Estado:** Approved · **Depende de:** 05-asteroids-game, 07-caida-game, 08-bloque-buster-game, 10-serpentina-game · **Fecha:** 2026-07-22
+> **Estado:** Implementado · **Depende de:** 05-asteroids-game, 07-caida-game, 08-bloque-buster-game, 10-serpentina-game · **Fecha:** 2026-07-22
 > **Objetivo:** Hacer jugables los 4 juegos en dispositivos táctiles mediante un panel de gamepad virtual debajo del canvas (cruceta + botones de acción) y arrastre directo para la paleta, sin modificar ningún engine.
 
 ## Por qué existe este spec
