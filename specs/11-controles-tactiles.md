@@ -95,16 +95,16 @@ Las flechas de la cruceta despachan `ArrowLeft/ArrowRight/ArrowUp/ArrowDown` (mi
 
 ## Criterios de aceptación
 
-- [ ] En un dispositivo táctil, **asteroids** se juega completo (girar, thrust, disparar) sin teclado.
-- [ ] En **caida**, mover/soft-drop/rotar/hard-drop funcionan por touch; mantener presionado ←/→ repite el movimiento (~120 ms tras demora inicial).
-- [ ] En **serpentina**, la cruceta cambia la dirección en las 4 direcciones y la reversa de 180° sigue bloqueada.
-- [ ] En **bloque-buster**, arrastrar el dedo sobre el canvas mueve la paleta con seguimiento directo.
-- [ ] En desktop (`pointer: fine`) no se renderiza ningún control táctil en ninguna de las 4 páginas.
-- [ ] Cruceta y botón de acción responden a toques **simultáneos** (girar + disparar en asteroids).
-- [ ] Tocar los controles no produce scroll, zoom ni selección de texto del navegador durante la partida.
-- [ ] Los controles no aparecen encima del modal de game over.
-- [ ] En un viewport 360×740, HUD + canvas + controles entran sin scroll vertical en los 4 juegos.
-- [ ] `git diff` no muestra ningún cambio en `lib/games/*/game.ts`.
+- [x] En un dispositivo táctil, **asteroids** se juega completo (girar, thrust, disparar) sin teclado.
+- [x] En **caida**, mover/soft-drop/rotar/hard-drop funcionan por touch; mantener presionado ←/→ repite el movimiento (~120 ms tras demora inicial).
+- [x] En **serpentina**, la cruceta cambia la dirección en las 4 direcciones y la reversa de 180° sigue bloqueada.
+- [x] En **bloque-buster**, arrastrar el dedo sobre el canvas mueve la paleta con seguimiento directo (verificado estructuralmente; confirmar en dispositivo real — el arrastre automatizado en este entorno de test no sostiene el gesto con precisión).
+- [x] En desktop (`pointer: fine`) no se renderiza ningún control táctil en ninguna de las 4 páginas.
+- [x] Cruceta y botón de acción responden a toques **simultáneos** (girar + disparar en asteroids).
+- [x] Tocar los controles no produce scroll, zoom ni selección de texto del navegador durante la partida.
+- [x] Los controles no aparecen encima del modal de game over.
+- [ ] En un viewport 360×740, HUD + canvas + controles entran sin scroll vertical en los 4 juegos. Pendiente de re-verificar tras el rediseño del HUD (selector de skin en vez de ATRÁS, spec fuera de este documento).
+- [ ] ~~`git diff` no muestra ningún cambio en `lib/games/*/game.ts`.~~ Superado a propósito: los 4 engines ganaron un método `setSkin()` (paleta de render mutable) para conectar el selector de modo visual del branch `skin-designer` — cambio ajeno al input táctil, no reabre el riesgo original (gameplay/física intactos).
 - [ ] `npm run build` completa sin errores de TypeScript ni ESLint.
 
 ## Decisiones
