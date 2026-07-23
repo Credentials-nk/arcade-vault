@@ -29,7 +29,15 @@ export default function CaidaGame({ callbacks, engineRef }: CaidaGameProps) {
   }, []);
 
   return (
-    <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', justifyContent: 'center' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 20,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+      }}
+    >
       <canvas
         ref={boardRef}
         width={300}

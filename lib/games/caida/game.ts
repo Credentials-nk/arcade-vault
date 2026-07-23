@@ -78,9 +78,9 @@ export class TetrisEngine {
   private nextCtx: CanvasRenderingContext2D;
   private cb: TetrisCallbacks;
   // Paleta de la skin: colores[0] queda null (celda vacía); 1–8 son las piezas.
-  private readonly colors: (string | null)[];
-  private readonly gridLine: string;
-  private readonly highlight: string;
+  private colors: (string | null)[];
+  private gridLine: string;
+  private highlight: string;
 
   private board: Board = [];
   private current!: Piece;
@@ -119,6 +119,13 @@ export class TetrisEngine {
     window.addEventListener('keydown', this.onKeyDown);
 
     this.init();
+  }
+
+  /** Recalcula la paleta de render a partir de una nueva skin, en caliente (sin reiniciar la partida). */
+  setSkin(skin: Skin): void {
+    this.colors = [null, ...skin.pieces];
+    this.gridLine = skin.line;
+    this.highlight = skin.highlight;
   }
 
   // La pausa (botón y tecla P) la controla React vía setPaused, para que el HUD

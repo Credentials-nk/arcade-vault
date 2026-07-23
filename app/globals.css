@@ -1688,15 +1688,21 @@ a {
   align-items: center;
 }
 .touch-action-btn {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border-color: transparent;
-  font-size: 13px;
+  /* 8px en vez de 13px: labels largos (ROTAR/SOLTAR en caída) no entran a 13px
+     en un botón circular sin desbordar hacia el vecino — ver A/B de asteroids,
+     que siguen legibles a este tamaño. */
+  font-size: 8px;
+  letter-spacing: 0;
   font-weight: bold;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  text-align: center;
 }
 .touch-action-blue {
   background: #3d6ea5;
