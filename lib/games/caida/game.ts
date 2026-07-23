@@ -3,23 +3,12 @@
 // globales de estado en la clase TetrisEngine y se reemplaza la manipulación
 // directa del DOM (HUD, overlay, tema) por un bridge de callbacks hacia React.
 
+import type { Skin } from '@/lib/skins';
+
 const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30; // px por celda en el tablero
 const NEXT_BLOCK = 30; // px por celda en el preview
-const GRID_LINE = 'rgba(255, 255, 255, 0.06)';
-
-const COLORS: (string | null)[] = [
-  null,
-  '#4dd0e1', // I - cyan
-  '#ffd54f', // O - yellow
-  '#ba68c8', // T - purple
-  '#81c784', // S - green
-  '#e57373', // Z - red
-  '#90caf9', // J - pale blue
-  '#ffb74d', // L - orange
-  '#9e9e9e', // N - tuerca (gris metálico)
-];
 
 const PIECES: (number[][] | null)[] = [
   null,
@@ -88,6 +77,10 @@ export class TetrisEngine {
   private ctx: CanvasRenderingContext2D;
   private nextCtx: CanvasRenderingContext2D;
   private cb: TetrisCallbacks;
+  // Paleta de la skin: colores[0] queda null (celda vacía); 1–8 son las piezas.
+  private colors: (string | null)[];
+  private gridLine: string;
+  private highlight: string;
 
   private board: Board = [];
   private current!: Piece;
@@ -106,18 +99,33 @@ export class TetrisEngine {
 
   private readonly onKeyDown: (e: KeyboardEvent) => void;
 
-  constructor(boardCanvas: HTMLCanvasElement, nextCanvas: HTMLCanvasElement, cb: TetrisCallbacks) {
+  constructor(
+    boardCanvas: HTMLCanvasElement,
+    nextCanvas: HTMLCanvasElement,
+    cb: TetrisCallbacks,
+    skin: Skin
+  ) {
     const ctx = boardCanvas.getContext('2d');
     const nextCtx = nextCanvas.getContext('2d');
     if (!ctx || !nextCtx) throw new Error('Cannot get 2d context from canvas');
     this.ctx = ctx;
     this.nextCtx = nextCtx;
     this.cb = cb;
+    this.colors = [null, ...skin.pieces];
+    this.gridLine = skin.line;
+    this.highlight = skin.highlight;
 
     this.onKeyDown = (e: KeyboardEvent) => this.handleKey(e);
     window.addEventListener('keydown', this.onKeyDown);
 
     this.init();
+  }
+
+  /** Recalcula la paleta de render a partir de una nueva skin, en caliente (sin reiniciar la partida). */
+  setSkin(skin: Skin): void {
+    this.colors = [null, ...skin.pieces];
+    this.gridLine = skin.line;
+    this.highlight = skin.highlight;
   }
 
   // La pausa (botón y tecla P) la controla React vía setPaused, para que el HUD
@@ -281,19 +289,19 @@ export class TetrisEngine {
     alpha?: number
   ): void {
     if (!colorIndex) return;
-    const color = COLORS[colorIndex];
+    const color = this.colors[colorIndex];
     if (!color) return;
     context.globalAlpha = alpha ?? 1;
     context.fillStyle = color;
     context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
     // highlight
-    context.fillStyle = 'rgba(255,255,255,0.12)';
+    context.fillStyle = this.highlight;
     context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
     context.globalAlpha = 1;
   }
 
   private drawGrid(): void {
-    this.ctx.strokeStyle = GRID_LINE;
+    this.ctx.strokeStyle = this.gridLine;
     this.ctx.lineWidth = 0.5;
     for (let c = 1; c < COLS; c++) {
       this.ctx.beginPath();

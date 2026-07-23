@@ -19,6 +19,13 @@
   --yellow: #f5ff00;
   --green: #00ff88;
 
+  /* Glow bases (rgb triplets) — feed rgba(var(--*-glow), a) so the game chrome
+     glows derive from variables and can be reskinned via [data-skin]. */
+  --cyan-glow: 0, 245, 255;
+  --magenta-glow: 255, 0, 110;
+  --yellow-glow: 245, 255, 0;
+  --green-glow: 0, 255, 136;
+
   /* Metallic accents */
   --gold: #ffcf3a;
   --silver: #c7d0e0;
@@ -31,6 +38,66 @@
   /* Typography */
   --pixel: 'Press Start 2P', system-ui, monospace;
   --mono: 'JetBrains Mono', 'Courier Prime', 'Courier New', monospace;
+}
+
+/* ===== SKINS (chrome del juego) =====
+   Cada juego aplica data-skin en su contenedor raíz (.av-player). Estos bloques
+   sobrescriben las variables de acento para reskinar HUD, botones, marco CRT y
+   modal. Siempre dark-only: --bg* permanece oscuro. La paleta del canvas la
+   define lib/skins.ts y se inyecta al engine por constructor. */
+
+/* neon — estética actual (idéntica a :root, explícita para robustez). */
+[data-skin='neon'] {
+  --cyan: #00f5ff;
+  --magenta: #ff006e;
+  --yellow: #f5ff00;
+  --green: #00ff88;
+  --cyan-glow: 0, 245, 255;
+  --magenta-glow: 255, 0, 110;
+  --yellow-glow: 245, 255, 0;
+  --green-glow: 0, 255, 136;
+  --line: rgba(0, 245, 255, 0.18);
+}
+
+/* clasico — arcade sobrio: acentos apagados y planos, glow tenue. */
+[data-skin='clasico'] {
+  --cyan: #c3ccdd;
+  --magenta: #c56b8a;
+  --yellow: #d8b24e;
+  --green: #7fbf8f;
+  --cyan-glow: 195, 204, 221;
+  --magenta-glow: 197, 107, 138;
+  --yellow-glow: 216, 178, 78;
+  --green-glow: 127, 191, 143;
+  --line: rgba(195, 204, 221, 0.12);
+}
+
+/* retro — CRT monocromo ámbar: todo el chrome vira a un único fósforo. */
+[data-skin='retro'] {
+  --ink: #ffd591;
+  --cyan: #ffb000;
+  --magenta: #ffb000;
+  --yellow: #ffce5c;
+  --green: #ffb000;
+  --cyan-glow: 255, 176, 0;
+  --magenta-glow: 255, 176, 0;
+  --yellow-glow: 255, 206, 92;
+  --green-glow: 255, 176, 0;
+  --line: rgba(255, 176, 0, 0.18);
+}
+/* Scanlines ámbar reforzadas sobre la pantalla CRT en skin retro. */
+[data-skin='retro'] .crt-screen::after {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 176, 0, 0.1) 0 1px,
+    rgba(0, 0, 0, 0.28) 1px 3px
+  );
+  mix-blend-mode: normal;
+}
+[data-skin='retro'] .crt-screen {
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.9),
+    inset 0 0 26px rgba(255, 176, 0, 0.18);
 }
 
 * {
@@ -418,15 +485,15 @@ a {
   content: '';
   position: absolute;
   inset: 3px;
-  border: 1px solid rgba(0, 245, 255, 0.25);
+  border: 1px solid rgba(var(--cyan-glow), 0.25);
   pointer-events: none;
   clip-path: inherit;
 }
 .btn:hover {
   color: var(--cyan);
   box-shadow:
-    0 0 14px rgba(0, 245, 255, 0.55),
-    inset 0 0 8px rgba(0, 245, 255, 0.35);
+    0 0 14px rgba(var(--cyan-glow), 0.55),
+    inset 0 0 8px rgba(var(--cyan-glow), 0.35);
 }
 .btn:active {
   transform: translateY(1px) scale(0.98);
@@ -437,8 +504,8 @@ a {
 .btn.magenta:hover {
   color: var(--magenta);
   box-shadow:
-    0 0 14px rgba(255, 0, 110, 0.55),
-    inset 0 0 8px rgba(255, 0, 110, 0.35);
+    0 0 14px rgba(var(--magenta-glow), 0.55),
+    inset 0 0 8px rgba(var(--magenta-glow), 0.35);
 }
 .btn.yellow {
   border-color: var(--yellow);
@@ -446,8 +513,8 @@ a {
 .btn.yellow:hover {
   color: var(--yellow);
   box-shadow:
-    0 0 14px rgba(245, 255, 0, 0.6),
-    inset 0 0 8px rgba(245, 255, 0, 0.35);
+    0 0 14px rgba(var(--yellow-glow), 0.6),
+    inset 0 0 8px rgba(var(--yellow-glow), 0.35);
 }
 .btn.ghost {
   border-color: var(--ink-faint);
@@ -480,7 +547,7 @@ a {
   50% {
     box-shadow:
       0 0 20px var(--cyan),
-      inset 0 0 12px rgba(0, 245, 255, 0.45);
+      inset 0 0 12px rgba(var(--cyan-glow), 0.45);
   }
 }
 
@@ -744,53 +811,6 @@ a {
       calc(50% - 12px) / 12px 12px no-repeat;
   filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
 }
-.cover-glot {
-  background: radial-gradient(circle at 50% 50%, #1a002a, #0a0a18);
-}
-.cover-glot::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 30% 50%, var(--yellow) 0 38px, transparent 39px),
-    radial-gradient(circle at 30% 50%, transparent 0 0, transparent 28px),
-    radial-gradient(circle at 70% 50%, var(--magenta) 0 6px, transparent 7px),
-    radial-gradient(circle at 82% 50%, var(--cyan) 0 6px, transparent 7px);
-  clip-path: polygon(0 0, 30% 0, 30% 50%, 100% 30%, 100% 70%, 30% 50%, 30% 100%, 0 100%);
-  filter: drop-shadow(0 0 8px rgba(245, 255, 0, 0.5));
-}
-.cover-glot::before {
-  content: '•••';
-  position: absolute;
-  left: 55%;
-  top: 47%;
-  color: var(--cyan);
-  letter-spacing: 6px;
-  font-size: 18px;
-  text-shadow: 0 0 6px var(--cyan);
-}
-.cover-invaders {
-  background: linear-gradient(180deg, #001a3a, #0a0a18);
-}
-.cover-invaders::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 30%, var(--green) 0 5px, transparent 6px),
-    radial-gradient(circle at 40% 30%, var(--green) 0 5px, transparent 6px),
-    radial-gradient(circle at 60% 30%, var(--green) 0 5px, transparent 6px),
-    radial-gradient(circle at 80% 30%, var(--green) 0 5px, transparent 6px),
-    radial-gradient(circle at 20% 50%, var(--magenta) 0 5px, transparent 6px),
-    radial-gradient(circle at 40% 50%, var(--magenta) 0 5px, transparent 6px),
-    radial-gradient(circle at 60% 50%, var(--magenta) 0 5px, transparent 6px),
-    radial-gradient(circle at 80% 50%, var(--magenta) 0 5px, transparent 6px),
-    radial-gradient(circle at 50% 80%, var(--cyan) 0 8px, transparent 9px);
-  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
-}
-.cover-rocas {
-  background: radial-gradient(circle at 50% 50%, #0a0a30, #000);
-}
 .cover-asteroids {
   background: radial-gradient(circle at 30% 70%, #00102a, #000);
 }
@@ -817,27 +837,6 @@ a {
   font-size: 16px;
   text-shadow: 0 0 10px var(--cyan);
   z-index: 1;
-}
-.cover-rocas::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 22% 30%, #888 0 18px, transparent 19px),
-    radial-gradient(circle at 75% 60%, #aaa 0 26px, transparent 27px),
-    radial-gradient(circle at 50% 80%, #777 0 14px, transparent 15px),
-    radial-gradient(circle at 88% 22%, var(--cyan) 0 2px, transparent 3px),
-    radial-gradient(circle at 12% 70%, var(--cyan) 0 2px, transparent 3px),
-    radial-gradient(circle at 60% 20%, var(--cyan) 0 2px, transparent 3px);
-}
-.cover-rocas::before {
-  content: '▲';
-  position: absolute;
-  left: 48%;
-  top: 44%;
-  color: var(--yellow);
-  font-size: 22px;
-  text-shadow: 0 0 8px var(--yellow);
 }
 .cover-rana {
   background: linear-gradient(180deg, #001f2a, #0a0a18);
@@ -1037,15 +1036,15 @@ a {
   font-family: var(--pixel);
   font-size: 16px;
   color: var(--cyan);
-  text-shadow: 0 0 6px rgba(0, 245, 255, 0.5);
+  text-shadow: 0 0 6px rgba(var(--cyan-glow), 0.5);
 }
 .hud-stat.lives .v {
   color: var(--magenta);
-  text-shadow: 0 0 6px rgba(255, 0, 110, 0.5);
+  text-shadow: 0 0 6px rgba(var(--magenta-glow), 0.5);
 }
 .hud-stat.level .v {
   color: var(--yellow);
-  text-shadow: 0 0 6px rgba(245, 255, 0, 0.5);
+  text-shadow: 0 0 6px rgba(var(--yellow-glow), 0.5);
 }
 .hud-actions {
   display: flex;
@@ -1061,14 +1060,24 @@ a {
   box-shadow:
     0 0 0 6px #1b1b22,
     0 0 0 7px #2a2a35,
-    0 30px 80px -20px rgba(0, 245, 255, 0.35);
+    0 30px 80px -20px rgba(var(--cyan-glow), 0.35);
   overflow: hidden;
+}
+/* Sin este tope, .crt crece con .av-player (hasta 1100px) mientras el
+   canvas de cada juego respeta su propia resolución nativa (800px en
+   asteroids/bloque-buster) — el .crt-screen queda más ancho que el canvas
+   y sobra una franja negra sin dibujar abajo/derecha. Modificador opuesto
+   a nivel de página (no en la clase base .crt) porque serpentina (600px)
+   y caída (tablero+panel «siguiente») tienen anchos nativos distintos. */
+.crt-800 {
+  max-width: 848px;
+  margin: 0 auto;
 }
 .crt::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 80% at 50% 30%, rgba(0, 245, 255, 0.05), transparent 60%);
+  background: radial-gradient(120% 80% at 50% 30%, rgba(var(--cyan-glow), 0.05), transparent 60%);
   pointer-events: none;
 }
 .crt-screen {
@@ -1079,7 +1088,7 @@ a {
   overflow: hidden;
   box-shadow:
     inset 0 0 60px rgba(0, 0, 0, 0.9),
-    inset 0 0 20px rgba(0, 245, 255, 0.15);
+    inset 0 0 20px rgba(var(--cyan-glow), 0.15);
 }
 .crt-screen::after {
   content: '';
@@ -1216,8 +1225,8 @@ a {
   background: var(--bg-2);
   border: 1px solid var(--magenta);
   box-shadow:
-    0 0 30px rgba(255, 0, 110, 0.4),
-    inset 0 0 16px rgba(255, 0, 110, 0.18);
+    0 0 30px rgba(var(--magenta-glow), 0.4),
+    inset 0 0 16px rgba(var(--magenta-glow), 0.18);
   padding: 32px;
   text-align: center;
   position: relative;
@@ -1226,7 +1235,7 @@ a {
   content: '';
   position: absolute;
   inset: 4px;
-  border: 1px dashed rgba(255, 0, 110, 0.4);
+  border: 1px dashed rgba(var(--magenta-glow), 0.4);
   pointer-events: none;
 }
 .modal h2 {
@@ -1234,14 +1243,14 @@ a {
   font-family: var(--pixel);
   color: var(--magenta);
   font-size: 22px;
-  text-shadow: 0 0 12px rgba(255, 0, 110, 0.7);
+  text-shadow: 0 0 12px rgba(var(--magenta-glow), 0.7);
   letter-spacing: 0.12em;
 }
 .modal .final {
   font-family: var(--pixel);
   font-size: 36px;
   color: var(--yellow);
-  text-shadow: 0 0 16px rgba(245, 255, 0, 0.6);
+  text-shadow: 0 0 16px rgba(var(--yellow-glow), 0.6);
   margin: 16px 0 6px;
 }
 .modal .final-label {
@@ -1267,7 +1276,7 @@ a {
 }
 .modal .input-row input:focus {
   border-color: var(--cyan);
-  box-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
+  box-shadow: 0 0 10px rgba(var(--cyan-glow), 0.35);
 }
 .modal .actions {
   display: flex;
@@ -1679,15 +1688,21 @@ a {
   align-items: center;
 }
 .touch-action-btn {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border-color: transparent;
-  font-size: 13px;
+  /* 8px en vez de 13px: labels largos (ROTAR/SOLTAR en caída) no entran a 13px
+     en un botón circular sin desbordar hacia el vecino — ver A/B de asteroids,
+     que siguen legibles a este tamaño. */
+  font-size: 8px;
+  letter-spacing: 0;
   font-weight: bold;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  text-align: center;
 }
 .touch-action-blue {
   background: #3d6ea5;
@@ -1727,10 +1742,20 @@ a {
 .touch-hud-actions .btn.ghost:hover {
   box-shadow: none;
 }
-/* Selector de modo visual (placeholder de 2 opciones hardcodeadas):
-   sin efecto real todavía, se conecta cuando se mergee con el trabajo
-   de @skin-designer. */
-.mode-select {
+/* Selector de skin (neon/clasico/retro), reemplaza a GAME_SKINS['asteroids']
+   como fuente de verdad de la skin activa. Dropdown propio (no <select>
+   nativo): un <select> nativo siempre abre hacia abajo y en la fila táctil
+   (pegada al footer) el navegador termina scrolleando la página para
+   mostrar las opciones. Este componente elige el lado con más espacio al
+   abrirse (`.mode-dropdown-list` = arriba por defecto, `-down` = abajo,
+   ver el cálculo en el onClick del trigger en page.tsx) — necesario porque
+   el mismo selector se usa en la fila táctil (pegada al footer, abre hacia
+   arriba) y en el HUD de desktop (pegado al header, abre hacia abajo). */
+.mode-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+.mode-dropdown-trigger {
   font-family: var(--pixel);
   font-size: 9px;
   letter-spacing: 0.06em;
@@ -1740,6 +1765,48 @@ a {
   border: 1px solid var(--cyan);
   border-radius: 4px;
   cursor: pointer;
+}
+.mode-dropdown-list {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 6px;
+  min-width: 100%;
+  list-style: none;
+  padding: 4px;
+  background: #0a0a0f;
+  border: 1px solid var(--cyan);
+  border-radius: 4px;
+  box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.5);
+  z-index: 60;
+  white-space: nowrap;
+}
+.mode-dropdown-list-down {
+  bottom: auto;
+  top: 100%;
+  margin-bottom: 0;
+  margin-top: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+.mode-dropdown-list li + li {
+  margin-top: 4px;
+}
+.mode-dropdown-list button {
+  width: 100%;
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  padding: 8px 10px;
+  color: var(--ink-dim);
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+}
+.mode-dropdown-list button[aria-selected='true'] {
+  background: var(--cyan);
+  color: #05050a;
 }
 .touch-drag-layer {
   position: absolute;

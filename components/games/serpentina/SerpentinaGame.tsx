@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { SerpentinaEngine, SerpentinaCallbacks } from '@/lib/games/serpentina/game';
+import { getSkin } from '@/lib/skins';
 
 interface SerpentinaGameProps {
   callbacks: SerpentinaCallbacks;
@@ -15,7 +16,7 @@ export default function SerpentinaGame({ callbacks, engineRef }: SerpentinaGameP
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const engine = new SerpentinaEngine(canvas, callbacks);
+    const engine = new SerpentinaEngine(canvas, callbacks, getSkin('serpentina'));
     engineRef.current = engine;
 
     return () => {

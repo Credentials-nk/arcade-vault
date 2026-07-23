@@ -1,12 +1,14 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import AsteroidsGame from '@/components/games/asteroids/AsteroidsGame';
 import TouchControls from '@/components/games/TouchControls';
+import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { AsteroidsEngine, AsteroidsCallbacks } from '@/lib/games/asteroids/game';
 import { saveScore } from '@/app/actions/saveScore';
+import { GAME_SKINS, SKINS, type SkinName } from '@/lib/skins';
 
 export default function AsteroidsPage() {
   const router = useRouter();
@@ -23,9 +25,16 @@ export default function AsteroidsPage() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [gameKey, setGameKey] = useState(0);
-  const [displayMode, setDisplayMode] = useState<'neon' | 'classic'>('neon');
+  const [displayMode, setDisplayMode] = useState<SkinName>(GAME_SKINS['asteroids']);
 
   const [isPending, startTransition] = useTransition();
+
+  // El selector de modo reemplaza a GAME_SKINS['asteroids'] como fuente de
+  // verdad de la skin activa (arranca en la canónica) y la aplica en caliente
+  // tanto al canvas (engine.setSkin) como al chrome (data-skin más abajo).
+  useEffect(() => {
+    engineRef.current?.setSkin(SKINS[displayMode]);
+  }, [displayMode, gameKey]);
 
   const callbacks: AsteroidsCallbacks = {
     onScore: setScore,
@@ -45,10 +54,6 @@ export default function AsteroidsPage() {
 
   function handleExit() {
     router.push('/library');
-  }
-
-  function handleBack() {
-    router.push('/game/asteroids');
   }
 
   function handleRestart() {
@@ -75,7 +80,10 @@ export default function AsteroidsPage() {
   }
 
   return (
-    <div className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}>
+    <div
+      className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}
+      data-skin={displayMode}
+    >
       {/* HUD exterior — oculto en touch: el canvas de Asteroids ya dibuja SCORE/NIVEL/vidas */}
       {!isTouch && (
         <div className="player-hud">
@@ -103,9 +111,7 @@ export default function AsteroidsPage() {
             <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
               {paused ? 'REANUDAR' : 'PAUSA'}
             </button>
-            <button className="btn ghost" onClick={handleBack}>
-              ATRÁS
-            </button>
+            <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
             <button className="btn ghost" onClick={handleExit}>
               SALIR
             </button>
@@ -114,7 +120,7 @@ export default function AsteroidsPage() {
       )}
 
       {/* Canvas dentro del marco CRT */}
-      <div className="crt">
+      <div className="crt crt-800">
         <div className="crt-screen" style={{ borderRadius: 0 }}>
           <AsteroidsGame
             key={gameKey}
@@ -147,15 +153,7 @@ export default function AsteroidsPage() {
               <button className="btn yellow" onClick={handlePause}>
                 {paused ? 'REANUDAR' : 'PAUSA'}
               </button>
-              <select
-                className="mode-select"
-                aria-label="Modo visual"
-                value={displayMode}
-                onChange={(e) => setDisplayMode(e.target.value as 'neon' | 'classic')}
-              >
-                <option value="neon">NEON</option>
-                <option value="classic">CLASSIC</option>
-              </select>
+              <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
               <button className="btn ghost" onClick={handleExit}>
                 SALIR
               </button>

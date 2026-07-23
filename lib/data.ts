@@ -60,12 +60,9 @@ export interface TickerRow {
 
 export const TICKER_ROWS: TickerRow[] = [
   { player: 'NEONFOX', game: 'Caída', score: 184220, ago: 'hace 2 min', color: 'magenta' },
-  { player: 'PX_KAI', game: 'Glotón', score: 96400, ago: 'hace 5 min', color: 'yellow' },
-  { player: 'Z3R0COOL', game: 'Invasores', score: 54190, ago: 'hace 8 min', color: 'green' },
-  { player: 'VAULT_07', game: 'Rocas', score: 41200, ago: 'hace 12 min', color: 'cyan' },
   { player: 'GLITCHA', game: 'Bloque Buster', score: 28450, ago: 'hace 18 min', color: 'cyan' },
   { player: 'ARKADYA', game: 'Serpentina', score: 7820, ago: 'hace 24 min', color: 'green' },
-  { player: 'CYBER_LU', game: 'Glotón', score: 18900, ago: 'hace 31 min', color: 'yellow' },
+  { player: 'PX_KAI', game: 'Asteroids', score: 41200, ago: 'hace 31 min', color: 'yellow' },
 ];
 
 export function seededScores(seed: number, count = 12): ScoreRow[] {

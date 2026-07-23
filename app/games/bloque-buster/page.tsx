@@ -3,12 +3,17 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import BloqueBusterGame from '@/components/games/bloque-buster/BloqueBusterGame';
+import TouchControls from '@/components/games/TouchControls';
+import SkinModeSelect from '@/components/games/SkinModeSelect';
+import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { ArkanoidEngine, ArkanoidCallbacks } from '@/lib/games/bloque-buster/game';
 import { saveScore } from '@/app/actions/saveScore';
+import { GAME_SKINS, SKINS, type SkinName } from '@/lib/skins';
 
 export default function BloqueBusterPage() {
   const router = useRouter();
   const engineRef = useRef<ArkanoidEngine | null>(null);
+  const isTouch = useTouchDevice();
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -21,8 +26,13 @@ export default function BloqueBusterPage() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [gameKey, setGameKey] = useState(0);
+  const [displayMode, setDisplayMode] = useState<SkinName>(GAME_SKINS['bloque-buster']);
 
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    engineRef.current?.setSkin(SKINS[displayMode]);
+  }, [displayMode, gameKey]);
 
   const callbacks: ArkanoidCallbacks = {
     onScore: setScore,
@@ -56,10 +66,6 @@ export default function BloqueBusterPage() {
     router.push('/library');
   }
 
-  function handleBack() {
-    router.push('/game/bloque-buster');
-  }
-
   function handleRestart() {
     setGameOver(false);
     setWon(false);
@@ -85,46 +91,50 @@ export default function BloqueBusterPage() {
   }
 
   return (
-    <div className="av-player fade-in">
+    <div
+      className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}
+      data-skin={displayMode}
+    >
       {/* HUD exterior */}
-      <div className="player-hud">
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-          <div className="hud-stat">
-            <div className="l">Jugador</div>
-            <div className="v" style={{ color: 'var(--ink)' }}>
-              INVITADO
+      {!isTouch && (
+        <div className="player-hud">
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            <div className="hud-stat">
+              <div className="l">Jugador</div>
+              <div className="v" style={{ color: 'var(--ink)' }}>
+                INVITADO
+              </div>
+            </div>
+            <div className="hud-stat">
+              <div className="l">Puntuación</div>
+              <div className="v">{score.toLocaleString('es-ES')}</div>
+            </div>
+            <div className="hud-stat lives">
+              <div className="l">Vidas</div>
+              <div className="v">{'♥ '.repeat(Math.max(0, lives)).trim() || '—'}</div>
+            </div>
+            <div className="hud-stat level">
+              <div className="l">Nivel</div>
+              <div className="v">{String(level).padStart(2, '0')}</div>
             </div>
           </div>
-          <div className="hud-stat">
-            <div className="l">Puntuación</div>
-            <div className="v">{score.toLocaleString('es-ES')}</div>
-          </div>
-          <div className="hud-stat lives">
-            <div className="l">Vidas</div>
-            <div className="v">{'♥ '.repeat(Math.max(0, lives)).trim() || '—'}</div>
-          </div>
-          <div className="hud-stat level">
-            <div className="l">Nivel</div>
-            <div className="v">{String(level).padStart(2, '0')}</div>
+          <div className="hud-actions">
+            <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
+              {paused ? 'REANUDAR' : 'PAUSA'}
+            </button>
+            <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
+            <button className="btn ghost" onClick={handleExit}>
+              SALIR
+            </button>
           </div>
         </div>
-        <div className="hud-actions">
-          <button className="btn yellow" onClick={handlePause} disabled={gameOver}>
-            {paused ? 'REANUDAR' : 'PAUSA'}
-          </button>
-          <button className="btn ghost" onClick={handleBack}>
-            ATRÁS
-          </button>
-          <button className="btn ghost" onClick={handleExit}>
-            SALIR
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Canvas dentro del marco CRT */}
-      <div className="crt">
+      <div className="crt crt-800">
         <div className="crt-screen" style={{ borderRadius: 0 }}>
           <BloqueBusterGame key={gameKey} callbacks={callbacks} engineRef={engineRef} />
+          {isTouch && <TouchControls drag hidden={gameOver} />}
           {paused && !gameOver && <div className="pause-overlay">EN PAUSA</div>}
         </div>
         <div className="crt-bottom">
@@ -133,6 +143,18 @@ export default function BloqueBusterPage() {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+
+      {isTouch && !gameOver && (
+        <div className="hud-actions touch-hud-actions">
+          <button className="btn yellow" onClick={handlePause}>
+            {paused ? 'REANUDAR' : 'PAUSA'}
+          </button>
+          <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
+          <button className="btn ghost" onClick={handleExit}>
+            SALIR
+          </button>
+        </div>
+      )}
 
       {/* Modal Game Over / Victoria */}
       {gameOver && (

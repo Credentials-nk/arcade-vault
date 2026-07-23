@@ -3,12 +3,17 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import CaidaGame from '@/components/games/caida/CaidaGame';
+import TouchControls from '@/components/games/TouchControls';
+import SkinModeSelect from '@/components/games/SkinModeSelect';
+import { useTouchDevice } from '@/hooks/useTouchDevice';
 import { TetrisEngine, TetrisCallbacks } from '@/lib/games/caida/game';
 import { saveScore } from '@/app/actions/saveScore';
+import { GAME_SKINS, SKINS, type SkinName } from '@/lib/skins';
 
 export default function CaidaPage() {
   const router = useRouter();
   const engineRef = useRef<TetrisEngine | null>(null);
+  const isTouch = useTouchDevice();
 
   const [score, setScore] = useState(0);
   const [lines, setLines] = useState(0);
@@ -20,8 +25,13 @@ export default function CaidaPage() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [gameKey, setGameKey] = useState(0);
+  const [displayMode, setDisplayMode] = useState<SkinName>(GAME_SKINS['caida']);
 
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    engineRef.current?.setSkin(SKINS[displayMode]);
+  }, [displayMode, gameKey]);
 
   const callbacks: TetrisCallbacks = {
     onScore: setScore,
@@ -54,10 +64,6 @@ export default function CaidaPage() {
     router.push('/library');
   }
 
-  function handleBack() {
-    router.push('/game/caida');
-  }
-
   function handleRestart() {
     setGameOver(false);
     setSaved(false);
@@ -82,41 +88,44 @@ export default function CaidaPage() {
   }
 
   return (
-    <div className="av-player fade-in">
+    <div
+      className={`av-player fade-in${isTouch ? ' av-player-touch' : ''}`}
+      data-skin={displayMode}
+    >
       {/* HUD exterior */}
-      <div className="player-hud">
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-          <div className="hud-stat">
-            <div className="l">Jugador</div>
-            <div className="v" style={{ color: 'var(--ink)' }}>
-              INVITADO
+      {!isTouch && (
+        <div className="player-hud">
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            <div className="hud-stat">
+              <div className="l">Jugador</div>
+              <div className="v" style={{ color: 'var(--ink)' }}>
+                INVITADO
+              </div>
+            </div>
+            <div className="hud-stat">
+              <div className="l">Puntuación</div>
+              <div className="v">{score.toLocaleString('es-ES')}</div>
+            </div>
+            <div className="hud-stat">
+              <div className="l">Líneas</div>
+              <div className="v">{lines}</div>
+            </div>
+            <div className="hud-stat level">
+              <div className="l">Nivel</div>
+              <div className="v">{String(level).padStart(2, '0')}</div>
             </div>
           </div>
-          <div className="hud-stat">
-            <div className="l">Puntuación</div>
-            <div className="v">{score.toLocaleString('es-ES')}</div>
-          </div>
-          <div className="hud-stat">
-            <div className="l">Líneas</div>
-            <div className="v">{lines}</div>
-          </div>
-          <div className="hud-stat level">
-            <div className="l">Nivel</div>
-            <div className="v">{String(level).padStart(2, '0')}</div>
+          <div className="hud-actions">
+            <button className="btn yellow" onClick={togglePause} disabled={gameOver}>
+              {paused ? 'REANUDAR' : 'PAUSA'}
+            </button>
+            <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
+            <button className="btn ghost" onClick={handleExit}>
+              SALIR
+            </button>
           </div>
         </div>
-        <div className="hud-actions">
-          <button className="btn yellow" onClick={togglePause} disabled={gameOver}>
-            {paused ? 'REANUDAR' : 'PAUSA'}
-          </button>
-          <button className="btn ghost" onClick={handleBack}>
-            ATRÁS
-          </button>
-          <button className="btn ghost" onClick={handleExit}>
-            SALIR
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Canvas dentro del marco CRT */}
       <div className="crt">
@@ -130,6 +139,32 @@ export default function CaidaPage() {
           <span>CARGA · 1MB</span>
         </div>
       </div>
+
+      {isTouch && (
+        <>
+          <TouchControls
+            dpad={['up', 'left', 'right', 'down']}
+            dpadMuted={['up']}
+            dpadRepeat
+            actions={[
+              { label: 'ROTAR', synthKey: { code: 'ArrowUp', key: 'ArrowUp' }, color: 'blue' },
+              { label: 'SOLTAR', synthKey: { code: 'Space', key: ' ' }, color: 'red' },
+            ]}
+            hidden={gameOver}
+          />
+          {!gameOver && (
+            <div className="hud-actions touch-hud-actions">
+              <button className="btn yellow" onClick={togglePause}>
+                {paused ? 'REANUDAR' : 'PAUSA'}
+              </button>
+              <SkinModeSelect value={displayMode} onChange={setDisplayMode} />
+              <button className="btn ghost" onClick={handleExit}>
+                SALIR
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Modal Game Over */}
       {gameOver && (
