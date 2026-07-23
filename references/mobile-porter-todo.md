@@ -1,10 +1,11 @@
 # Mobile Porter — pendiente de layout táctil consistente
 
-> Documento de arranque para un futuro subagente `@mobile-porter` (todavía no
-> creado — no crear `.claude/agents/mobile-porter.md` hasta que se pida
-> explícitamente). Mismo patrón que `references/game-skins.md` para
-> `@skin-designer`: una tarea puntual queda anotada acá hasta que el agente
-> exista y la retome.
+> Memoria viva del subagente **`@mobile-porter`** (`.claude/agents/mobile-porter.md`,
+> creado 2026-07-22). Mismo patrón que `references/game-skins.md` para
+> `@skin-designer`: el agente lee este documento al arrancar cada corrida y
+> registra acá el criterio unificado y el estado de la tarea. La tarea de
+> abajo sigue **pendiente** hasta que una corrida del agente la resuelva y el
+> usuario la valide en un dispositivo real.
 
 ## El problema (reportado por el usuario, 2026-07-22)
 
