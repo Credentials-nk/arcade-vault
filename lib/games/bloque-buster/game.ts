@@ -243,20 +243,49 @@ function drawSprite(
   ctx.drawImage(ssImg, sp.sx, sp.sy, sp.sw, sp.sh, x, y, w, h);
 }
 
+// ── Pool de audio ─────────────────────────────────────────────────────────────
+// Reusa un pool chico pre-alocado de HTMLAudioElement en vez de `cloneNode()`
+// por evento (rebote/rotura pueden dispararse varias veces en el mismo frame:
+// p. ej. la pelota tocando dos paredes a la vez). Round-robin entre `size`
+// nodos ya construidos: mismo clip audible en cada evento, sin alocar un nodo
+// nuevo por disparo.
+const AUDIO_POOL_SIZE = 4;
+
+class AudioPool {
+  private readonly nodes: HTMLAudioElement[];
+  private next = 0;
+
+  constructor(src: string, size: number) {
+    this.nodes = Array.from({ length: size }, () => new Audio(src));
+  }
+
+  play(): void {
+    const node = this.nodes[this.next];
+    this.next = (this.next + 1) % this.nodes.length;
+    node.currentTime = 0;
+    node.play().catch(() => {});
+  }
+}
+
 // ── Engine ────────────────────────────────────────────────────────────────────
 
 export class ArkanoidEngine {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly canvas: HTMLCanvasElement;
   private readonly cb: ArkanoidCallbacks;
-  private readonly bounceSound: HTMLAudioElement;
-  private readonly breakSound: HTMLAudioElement;
+  private readonly bounceSound: AudioPool;
+  private readonly breakSound: AudioPool;
 
   // Paleta de la skin: el spritesheet (bloques/paddle/pelota) no se toca, solo el
   // fondo del canvas y el texto de HUD/overlay que hoy se dibuja con fillStyle.
   private bg: string;
   private bgRgb: string;
   private hudText: string;
+  // Cache del scrim del overlay de fin de juego: se reconstruía cada frame
+  // dentro de drawOverlay() (el loop sigue dibujando aunque `update()` ya
+  // corte corto tras game over/win), pese a que solo depende de `bgRgb`, que
+  // no cambia salvo por setSkin(). Misma cadena emitida, cero alocación extra.
+  private overlayFill: string;
 
   private paddle: Rect = { x: 0, y: 560, w: 81, h: 14 };
   private ball: Ball = { x: 0, y: 0, w: 16, h: 16, vx: BASE_BALL_VX, vy: BASE_BALL_VY };
@@ -287,9 +316,10 @@ export class ArkanoidEngine {
     this.bg = skin.bg;
     this.bgRgb = rgbTriplet(skin.bg);
     this.hudText = skin.text;
+    this.overlayFill = `rgba(${this.bgRgb}, 0.6)`;
 
-    this.bounceSound = new Audio(SOUND_BOUNCE_SRC);
-    this.breakSound = new Audio(SOUND_BREAK_SRC);
+    this.bounceSound = new AudioPool(SOUND_BOUNCE_SRC, AUDIO_POOL_SIZE);
+    this.breakSound = new AudioPool(SOUND_BREAK_SRC, AUDIO_POOL_SIZE);
 
     canvas.addEventListener('mousemove', this.onMouseMove);
     window.addEventListener('keydown', this.onKeyDown);
@@ -309,6 +339,7 @@ export class ArkanoidEngine {
     this.paused = paused;
     if (!paused) {
       this.lastTime = null;
+      cancelAnimationFrame(this.rafId);
       this.rafId = requestAnimationFrame(this.loop);
     }
   }
@@ -318,6 +349,7 @@ export class ArkanoidEngine {
     this.bg = skin.bg;
     this.bgRgb = rgbTriplet(skin.bg);
     this.hudText = skin.text;
+    this.overlayFill = `rgba(${this.bgRgb}, 0.6)`;
   }
 
   destroy(): void {
@@ -345,11 +377,6 @@ export class ArkanoidEngine {
   private onKeyUp = (e: KeyboardEvent): void => {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') this.keys[e.key] = false;
   };
-
-  private playSound(audio: HTMLAudioElement): void {
-    const node = audio.cloneNode() as HTMLAudioElement;
-    node.play().catch(() => {});
-  }
 
   private initPaddle(): void {
     this.paddle.x = (W - this.paddle.w) / 2;
@@ -401,17 +428,17 @@ export class ArkanoidEngine {
     if (this.ball.x <= 0) {
       this.ball.x = 0;
       this.ball.vx = Math.abs(this.ball.vx);
-      this.playSound(this.bounceSound);
+      this.bounceSound.play();
     }
     if (this.ball.x + this.ball.w >= W) {
       this.ball.x = W - this.ball.w;
       this.ball.vx = -Math.abs(this.ball.vx);
-      this.playSound(this.bounceSound);
+      this.bounceSound.play();
     }
     if (this.ball.y <= 0) {
       this.ball.y = 0;
       this.ball.vy = Math.abs(this.ball.vy);
-      this.playSound(this.bounceSound);
+      this.bounceSound.play();
     }
 
     if (
@@ -423,7 +450,7 @@ export class ArkanoidEngine {
     ) {
       this.ball.y = this.paddle.y - this.ball.h;
       this.ball.vy = -Math.abs(this.ball.vy);
-      this.playSound(this.bounceSound);
+      this.bounceSound.play();
     }
 
     for (const block of this.blocks) {
@@ -441,7 +468,7 @@ export class ArkanoidEngine {
         this.score += 10;
         this.cb.onScore(this.score);
         this.ball.vy = -this.ball.vy;
-        this.playSound(this.breakSound);
+        this.breakSound.play();
         if (this.blocks.every((b) => !b.alive)) {
           if (this.currentLevel < 5) {
             this.loadLevel(this.currentLevel + 1);
@@ -454,8 +481,18 @@ export class ArkanoidEngine {
       }
     }
 
-    for (const exp of this.explosions) exp.elapsed += dt * 1000;
-    this.explosions = this.explosions.filter((exp) => exp.elapsed < EXPLOSION_DURATION);
+    // Compactación in-place (en vez de `.filter()`, que alocaría un array nuevo
+    // cada frame incluso cuando no hay explosiones vivas): mismo conjunto de
+    // sobrevivientes, mismo orden (índice de escritura preserva orden).
+    let writeIdx = 0;
+    for (let readIdx = 0; readIdx < this.explosions.length; readIdx++) {
+      const exp = this.explosions[readIdx];
+      exp.elapsed += dt * 1000;
+      if (exp.elapsed < EXPLOSION_DURATION) {
+        this.explosions[writeIdx++] = exp;
+      }
+    }
+    this.explosions.length = writeIdx;
 
     if (this.ball.y > H) {
       this.lives--;
@@ -472,7 +509,7 @@ export class ArkanoidEngine {
 
   private drawOverlay(message: string): void {
     const ctx = this.ctx;
-    ctx.fillStyle = `rgba(${this.bgRgb}, 0.6)`;
+    ctx.fillStyle = this.overlayFill;
     ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = this.hudText;
     ctx.font = 'bold 64px monospace';

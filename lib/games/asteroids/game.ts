@@ -12,6 +12,24 @@ interface RenderPalette {
   fgRgb: string;
   accent: string;
   flame: string;
+  /**
+   * P3: tabla de 101 strings `rgba(fgRgb, alpha)` precomputada por skin,
+   * indexada por `Math.round(alpha * 100)` (mismo paso de cuantización que ya
+   * usaba `alpha.toFixed(2)`). Evita armar el template string por partícula y
+   * por frame en Particle.draw().
+   */
+  particleAlpha: string[];
+}
+
+// P3: arma la tabla de 101 buckets de alpha (0.00–1.00 en pasos de 0.01) para
+// un `fgRgb` dado. Se recalcula una sola vez por skin (constructor/setSkin),
+// nunca por entidad ni por frame.
+function buildParticleAlphaTable(fgRgb: string): string[] {
+  const table: string[] = [];
+  for (let i = 0; i <= 100; i++) {
+    table.push(`rgba(${fgRgb}, ${(i / 100).toFixed(2)})`);
+  }
+  return table;
 }
 
 const wrap = (v: number, max: number): number => ((v % max) + max) % max;
@@ -19,6 +37,20 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }): number 
   Math.hypot(a.x - b.x, a.y - b.y);
 const rand = (min: number, max: number): number => min + Math.random() * (max - min);
 const randInt = (min: number, max: number): number => Math.floor(rand(min, max + 1));
+
+// P2: compacta un array in-place (por índice de escritura, preserva orden) en
+// vez de arr.filter(...), que aloca un array nuevo cada vez que se llama.
+// Se usa para podar entidades marcadas `dead` una vez por frame.
+function compactDead<T extends { dead: boolean }>(arr: T[]): void {
+  let write = 0;
+  for (let read = 0; read < arr.length; read++) {
+    if (!arr[read].dead) {
+      arr[write] = arr[read];
+      write++;
+    }
+  }
+  arr.length = write;
+}
 
 const POWERUP_DROP_CHANCE = 0.15;
 const POWERUP_DURATION = 5;
@@ -86,6 +118,11 @@ class Asteroid {
   rotSpeed: number;
   rot: number;
   verts: [number, number][];
+  // P4: contorno del wireframe cacheado en un Path2D (mismos puntos/orden que
+  // `verts`, armado una sola vez acá) en vez de re-emitir moveTo/lineTo por
+  // cada vértice en cada draw() — los vértices nunca cambian tras construirse,
+  // solo la posición/rotación extrínseca (aplicadas por transform en draw()).
+  private path: Path2D;
 
   constructor(x: number, y: number, size = 3) {
     this.x = x;
@@ -108,6 +145,12 @@ class Asteroid {
       const r = this.radius * rand(0.6, 1.0);
       this.verts.push([Math.cos(a) * r, Math.sin(a) * r]);
     }
+
+    this.path = new Path2D();
+    this.path.moveTo(this.verts[0][0], this.verts[0][1]);
+    for (let i = 1; i < this.verts.length; i++)
+      this.path.lineTo(this.verts[i][0], this.verts[i][1]);
+    this.path.closePath();
   }
 
   update(dt: number): void {
@@ -131,11 +174,7 @@ class Asteroid {
     ctx.strokeStyle = pal.fg;
     ctx.lineWidth = 1.5;
     ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(this.verts[0][0], this.verts[0][1]);
-    for (let i = 1; i < this.verts.length; i++) ctx.lineTo(this.verts[i][0], this.verts[i][1]);
-    ctx.closePath();
-    ctx.stroke();
+    ctx.stroke(this.path);
     ctx.restore();
   }
 }
@@ -337,7 +376,7 @@ class Particle {
 
   draw(ctx: CanvasRenderingContext2D, pal: RenderPalette): void {
     const alpha = this.ttl / this.life;
-    ctx.strokeStyle = `rgba(${pal.fgRgb}, ${alpha.toFixed(2)})`;
+    ctx.strokeStyle = pal.particleAlpha[Math.round(alpha * 100)];
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
@@ -382,12 +421,14 @@ export class AsteroidsEngine {
     if (!ctx) throw new Error('Cannot get 2d context from canvas');
     this.ctx = ctx;
     this.cb = cb;
+    const fgRgb = rgbTriplet(skin.primary);
     this.pal = {
       bg: skin.bg,
       fg: skin.primary,
-      fgRgb: rgbTriplet(skin.primary),
+      fgRgb,
       accent: skin.accent,
       flame: skin.flame,
+      particleAlpha: buildParticleAlphaTable(fgRgb),
     };
 
     this.onKeyDown = (e: KeyboardEvent) => {
@@ -407,12 +448,14 @@ export class AsteroidsEngine {
 
   /** Recalcula la paleta de render a partir de una nueva skin, en caliente (sin reiniciar la partida). */
   setSkin(skin: Skin): void {
+    const fgRgb = rgbTriplet(skin.primary);
     this.pal = {
       bg: skin.bg,
       fg: skin.primary,
-      fgRgb: rgbTriplet(skin.primary),
+      fgRgb,
       accent: skin.accent,
       flame: skin.flame,
+      particleAlpha: buildParticleAlphaTable(fgRgb),
     };
   }
 
@@ -420,6 +463,12 @@ export class AsteroidsEngine {
     this.paused = paused;
     if (!paused) {
       this.lastTime = null;
+      // Guarda de único dueño del loop (P1, mismo patrón que init() de Caída):
+      // cancela cualquier frame agendado antes de reagendar. En el flujo normal
+      // el loop anterior ya cortó solo (loop() retorna sin reagendarse mientras
+      // this.paused), así que esto es un no-op — blinda contra un doble loop si
+      // setPaused(false) se llegara a invocar dos veces sin pausa intermedia.
+      cancelAnimationFrame(this.rafId);
       this.rafId = requestAnimationFrame(this.loop);
     }
   }
@@ -500,14 +549,14 @@ export class AsteroidsEngine {
   private update(dt: number): void {
     if (this.state === 'gameover') {
       this.particles.forEach((p) => p.update(dt));
-      this.particles = this.particles.filter((p) => !p.dead);
+      compactDead(this.particles);
       return;
     }
 
     if (this.state === 'dead') {
       this.deadTimer -= dt;
       this.particles.forEach((p) => p.update(dt));
-      this.particles = this.particles.filter((p) => !p.dead);
+      compactDead(this.particles);
       this.asteroids.forEach((a) => a.update(dt));
       if (this.deadTimer <= 0) {
         this.state = 'playing';
@@ -526,9 +575,14 @@ export class AsteroidsEngine {
     this.particles.forEach((p) => p.update(dt));
     this.powerUps.forEach((p) => p.update(dt));
 
-    this.bullets = this.bullets.filter((b) => !b.dead);
-    this.particles = this.particles.filter((p) => !p.dead);
-    this.powerUps = this.powerUps.filter((p) => !p.dead);
+    // Nota: acá NO se compacta `bullets` todavía (a diferencia de antes, que
+    // filtraba dos veces por frame). La poda por TTL se difiere al
+    // compactDead(this.bullets) de más abajo, después del bucle de colisión:
+    // ese bucle ya excluye balas con `dead` true vía el chequeo `!b.dead`, así
+    // que un solo pase ahí captura tanto la muerte por TTL como la muerte por
+    // colisión (P2: nunca filtrar el mismo array dos veces en el mismo frame).
+    compactDead(this.particles);
+    compactDead(this.powerUps);
 
     for (const p of this.powerUps) {
       if (!p.dead && dist(this.ship, p) < this.ship.radius + p.radius) {
@@ -558,8 +612,9 @@ export class AsteroidsEngine {
         }
       }
     }
-    this.asteroids = this.asteroids.filter((a) => !a.dead).concat(newAsteroids);
-    this.bullets = this.bullets.filter((b) => !b.dead);
+    compactDead(this.asteroids);
+    for (const na of newAsteroids) this.asteroids.push(na);
+    compactDead(this.bullets);
 
     if (this.ship.invincible <= 0) {
       for (const a of this.asteroids) {
