@@ -128,6 +128,14 @@ export default function Nav({ user, isLoading, onSignOut }: NavProps) {
                     {user.email && <div className="account-dropdown-email">{user.email}</div>}
                   </div>
                 </div>
+                <Link
+                  href="/account"
+                  className="account-dropdown-link"
+                  role="menuitem"
+                  onClick={() => setAccountMenuOpen(false)}
+                >
+                  MI CUENTA
+                </Link>
                 <button
                   className="account-dropdown-signout"
                   onClick={handleSignOut}
@@ -187,15 +195,24 @@ export default function Nav({ user, isLoading, onSignOut }: NavProps) {
           Acerca de
         </a>
         {user ? (
-          <a
-            onClick={() => {
-              setOpen(false);
-              handleSignOut();
-            }}
-            style={{ cursor: 'pointer' }}
-          >
-            {isSigningOut ? 'CERRANDO…' : `CERRAR SESIÓN (${user.name})`}
-          </a>
+          <>
+            <a
+              className={isActive('/account') ? 'active' : ''}
+              onClick={() => go('/account')}
+              style={{ cursor: 'pointer' }}
+            >
+              Mi Cuenta
+            </a>
+            <a
+              onClick={() => {
+                setOpen(false);
+                handleSignOut();
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              {isSigningOut ? 'CERRANDO…' : `CERRAR SESIÓN (${user.name})`}
+            </a>
+          </>
         ) : (
           <a
             className={isActive('/auth') ? 'active' : ''}
