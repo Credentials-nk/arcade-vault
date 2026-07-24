@@ -1,38 +1,35 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useState } from "react";
-
-export interface User {
-  name: string;
-}
-
-const KEY = "av_user";
+import { useCallback, useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { toAuthUser, type AuthUser } from '@/lib/auth';
 
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw) as User);
-      } catch {
-        localStorage.removeItem(KEY);
-      }
-    }
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ? toAuthUser(data.user) : null);
+      setIsLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? toAuthUser(session.user) : null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = useCallback((name: string) => {
-    const u: User = { name: name.toUpperCase().slice(0, 10) };
-    localStorage.setItem(KEY, JSON.stringify(u));
-    setUser(u);
+  const signOut = useCallback(async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
   }, []);
 
-  const signOut = useCallback(() => {
-    localStorage.removeItem(KEY);
-    setUser(null);
-  }, []);
-
-  return { user, login, signOut };
+  return { user, isLoading, signOut };
 }

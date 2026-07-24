@@ -6,7 +6,7 @@ import { useTouchDevice } from '@/hooks/useTouchDevice';
 import Nav from './Nav';
 
 export default function NavWrapper() {
-  const { user, signOut } = useUser();
+  const { user, isLoading, signOut } = useUser();
   const pathname = usePathname();
   const isTouch = useTouchDevice();
 
@@ -14,5 +14,5 @@ export default function NavWrapper() {
   // para ganar espacio vertical y evitar scroll.
   if (isTouch && pathname?.startsWith('/games/')) return null;
 
-  return <Nav user={user} onSignOut={signOut} />;
+  return <Nav user={user} isLoading={isLoading} onSignOut={signOut} />;
 }

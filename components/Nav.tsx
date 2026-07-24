@@ -1,26 +1,24 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-
-interface User {
-  name: string;
-}
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import type { AuthUser } from '@/lib/auth';
 
 interface NavProps {
-  user: User | null;
+  user: AuthUser | null;
+  isLoading: boolean;
   onSignOut: () => void;
 }
 
-export default function Nav({ user, onSignOut }: NavProps) {
+export default function Nav({ user, isLoading, onSignOut }: NavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    if (href === "/library") return pathname === "/library" || pathname.startsWith("/game");
+    if (href === '/') return pathname === '/';
+    if (href === '/library') return pathname === '/library' || pathname.startsWith('/game');
     return pathname.startsWith(href);
   };
 
@@ -40,16 +38,16 @@ export default function Nav({ user, onSignOut }: NavProps) {
         </Link>
 
         <div className="links">
-          <Link href="/" className={isActive("/") ? "active" : ""}>
+          <Link href="/" className={isActive('/') ? 'active' : ''}>
             Inicio
           </Link>
-          <Link href="/library" className={isActive("/library") ? "active" : ""}>
+          <Link href="/library" className={isActive('/library') ? 'active' : ''}>
             Biblioteca
           </Link>
-          <Link href="/hall" className={isActive("/hall") ? "active" : ""}>
+          <Link href="/hall" className={isActive('/hall') ? 'active' : ''}>
             Salón de la Fama
           </Link>
-          <Link href="/about" className={isActive("/about") ? "active" : ""}>
+          <Link href="/about" className={isActive('/about') ? 'active' : ''}>
             Acerca de
           </Link>
         </div>
@@ -61,79 +59,73 @@ export default function Nav({ user, onSignOut }: NavProps) {
           <span>CRÉDITOS · 03</span>
         </div>
 
-        {user ? (
-          <button className="btn ghost auth-btn" onClick={onSignOut}>
-            {user.name} ▾
-          </button>
-        ) : (
-          <Link href="/auth" className="btn auth-btn">
-            Iniciar Sesión
-          </Link>
-        )}
+        {!isLoading &&
+          (user ? (
+            <button className="btn ghost auth-btn" onClick={onSignOut}>
+              {user.name} ▾
+            </button>
+          ) : (
+            <Link href="/auth" className="btn auth-btn">
+              Iniciar Sesión
+            </Link>
+          ))}
 
-        <button
-          className="btn ghost hamburger"
-          onClick={() => setOpen(true)}
-          aria-label="Menú"
-        >
+        <button className="btn ghost hamburger" onClick={() => setOpen(true)} aria-label="Menú">
           ≡
         </button>
       </nav>
 
       <div
-        className={"av-mobile-backdrop" + (open ? " open" : "")}
+        className={'av-mobile-backdrop' + (open ? ' open' : '')}
         onClick={() => setOpen(false)}
       />
 
-      <aside className={"av-mobile-panel" + (open ? " open" : "")}>
-        <div
-          className="pixel neon-cyan"
-          style={{ fontSize: 11, marginBottom: 16 }}
-        >
+      <aside className={'av-mobile-panel' + (open ? ' open' : '')}>
+        <div className="pixel neon-cyan" style={{ fontSize: 11, marginBottom: 16 }}>
           MENÚ
         </div>
         <a
-          className={isActive("/") ? "active" : ""}
-          onClick={() => go("/")}
-          style={{ cursor: "pointer" }}
+          className={isActive('/') ? 'active' : ''}
+          onClick={() => go('/')}
+          style={{ cursor: 'pointer' }}
         >
           Inicio
         </a>
         <a
-          className={isActive("/library") ? "active" : ""}
-          onClick={() => go("/library")}
-          style={{ cursor: "pointer" }}
+          className={isActive('/library') ? 'active' : ''}
+          onClick={() => go('/library')}
+          style={{ cursor: 'pointer' }}
         >
           Biblioteca
         </a>
         <a
-          className={isActive("/hall") ? "active" : ""}
-          onClick={() => go("/hall")}
-          style={{ cursor: "pointer" }}
+          className={isActive('/hall') ? 'active' : ''}
+          onClick={() => go('/hall')}
+          style={{ cursor: 'pointer' }}
         >
           Salón de la Fama
         </a>
         <a
-          className={isActive("/about") ? "active" : ""}
-          onClick={() => go("/about")}
-          style={{ cursor: "pointer" }}
+          className={isActive('/about') ? 'active' : ''}
+          onClick={() => go('/about')}
+          style={{ cursor: 'pointer' }}
         >
           Acerca de
         </a>
         <a
-          className={isActive("/auth") ? "active" : ""}
-          onClick={() => go("/auth")}
-          style={{ cursor: "pointer" }}
+          className={isActive('/auth') ? 'active' : ''}
+          onClick={() => go('/auth')}
+          style={{ cursor: 'pointer' }}
         >
-          {user ? "Cuenta" : "Iniciar Sesión"}
+          {user ? 'Cuenta' : 'Iniciar Sesión'}
         </a>
         <div style={{ flex: 1 }} />
         <div
           className="pixel"
           style={{
             fontSize: 9,
-            color: "var(--ink-faint)",
-            letterSpacing: "0.16em",
+            color: 'var(--ink-faint)',
+            letterSpacing: '0.16em',
           }}
         >
           CRÉDITOS · 03
