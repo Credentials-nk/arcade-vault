@@ -1,6 +1,6 @@
 # SPEC 12 — Autenticación (registro, login, OAuth)
 
-> **Estado:** Aprobado · **Depende de:** 04-supabase-setup, 09-games-catalog-supabase · **Fecha:** 2026-07-24
+> **Estado:** Implementado · **Depende de:** 04-supabase-setup, 09-games-catalog-supabase · **Fecha:** 2026-07-24
 > **Objetivo:** Reemplazar la auth mockeada de `localStorage` (`hooks/useUser.ts`) por Supabase Auth real — registro y login por email/contraseña, login OAuth con Google y GitHub, y logout — cableando la UI ya existente en `app/auth/page.tsx` sin tocar el sistema de scores.
 
 ## Por qué existe este spec
@@ -83,16 +83,18 @@ OAuth (Google/GitHub) no pasa por el formulario de registro, así que no puebla 
 
 ## Criterios de aceptación
 
-- [ ] Registrarse con email + contraseña + usuario crea la cuenta en `auth.users`, con `user_metadata.username` seteado, y deja sesión activa sin necesidad de confirmar el email.
-- [ ] Loguearse con email/contraseña válidos entra y redirige a `/`; con credenciales inválidas muestra un mensaje de error y no navega.
-- [ ] Los botones GOOGLE y GITHUB inician el flujo OAuth y, tras autorizar, vuelven a la app logueados vía `/auth/callback`.
-- [ ] `components/Nav.tsx` muestra `user.name ▾` cuando hay sesión e "Iniciar Sesión" cuando no, sin parpadeo intermedio al recargar.
-- [ ] Cerrar sesión limpia la sesión de Supabase (cookies) y el Nav vuelve a mostrar "Iniciar Sesión".
-- [ ] "JUGAR COMO INVITADO" navega a `/` sin crear sesión; guardar un score sin sesión sigue usando `INVITADO` como fallback.
-- [ ] Logueado, el input de nombre del modal de game-over de los 5 juegos aparece pre-cargado con el nick de la cuenta (máx. 10 caracteres, mayúsculas).
-- [ ] `saveScore` y la tabla `scores` no cambian de forma respecto a hoy.
-- [ ] `hooks/useUser.ts` ya no lee ni escribe `localStorage` (`av_user`).
-- [ ] `npm run build` completa sin errores de TypeScript ni ESLint.
+- [ ] Registrarse con email + contraseña + usuario crea la cuenta en `auth.users`, con `user_metadata.username` seteado, y deja sesión activa sin necesidad de confirmar el email. _(La cuenta se crea correctamente con `user_metadata.username` seteado, pero **no** deja sesión activa: el toggle "Confirm email" del dashboard de Supabase sigue habilitado, así que `signUp` no abre sesión hasta confirmar el mail. Es un prerrequisito de configuración del paso 2 del plan, pendiente — no requiere cambio de código.)_
+- [x] Loguearse con email/contraseña válidos entra y redirige a `/`; con credenciales inválidas muestra un mensaje de error y no navega.
+- [x] Los botones GOOGLE y GITHUB inician el flujo OAuth y, tras autorizar, vuelven a la app logueados vía `/auth/callback`. _(Verificado en vivo con Google; GitHub comparte el mismo código (`signInWithOAuth`) y no se reprobó por separado en esta sesión.)_
+- [x] `components/Nav.tsx` muestra el nombre de cuenta cuando hay sesión e "Iniciar Sesión" cuando no, sin parpadeo intermedio al recargar. _(El diseño evolucionó de `user.name ▾` a un menú desplegable real con avatar del proveedor OAuth — ver nota debajo; el `▾` original ni siquiera renderizaba, la fuente pixel no tiene ese glifo.)_
+- [x] Cerrar sesión limpia la sesión de Supabase (cookies) y el Nav vuelve a mostrar "Iniciar Sesión". _(Verificado en vivo: el botón de cuenta abría un dropdown que a la vez cerraba sesión en el mismo click, dejando la UI en un estado inconsistente ante un segundo click accidental — corregido, ver nota.)_
+- [x] "JUGAR COMO INVITADO" navega a `/` sin crear sesión; guardar un score sin sesión sigue usando `INVITADO` como fallback.
+- [x] Logueado, el input de nombre del modal de game-over de los 5 juegos aparece pre-cargado con el nick de la cuenta (máx. 10 caracteres, mayúsculas).
+- [x] `saveScore` y la tabla `scores` no cambian de forma respecto a hoy.
+- [x] `hooks/useUser.ts` ya no lee ni escribe `localStorage` (`av_user`).
+- [x] `npm run build` completa sin errores de TypeScript ni ESLint.
+
+**Nota (post-implementación):** el botón de cuenta de `Nav.tsx` cerraba sesión directamente al primer click (sin confirmación ni menú), y como el mismo lugar de la pantalla pasaba a ser el link "Iniciar Sesión" apenas se cerraba la sesión, un segundo click accidental terminaba navegando a `/auth` en vez de repetir la acción — el reporte original de "estado inconsistente". Se reemplazó por un menú desplegable real (`account-menu`/`account-dropdown` en `Nav.tsx` + `globals.css`) que se abre con un click, muestra avatar (desde `user_metadata.avatar_url`/`picture`, poblado por Google/GitHub — nuevo campo `AuthUser.avatarUrl` en `lib/auth.ts`) + nombre + email, y solo cierra sesión desde un ítem "CERRAR SESIÓN" explícito con estado deshabilitado mientras la petición está en curso. El panel móvil recibió el mismo tratamiento (antes enlazaba a `/auth` incluso logueado).
 
 ## Decisiones
 
