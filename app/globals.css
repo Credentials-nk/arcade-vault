@@ -401,6 +401,120 @@ a {
   display: none;
 }
 
+.account-menu {
+  position: relative;
+  margin-left: 16px;
+}
+.account-menu .account-trigger {
+  margin-left: 0;
+  gap: 8px;
+  padding: 8px 14px;
+}
+.account-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--ink-faint);
+  flex-shrink: 0;
+}
+.account-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-3);
+  color: var(--cyan);
+  font-family: var(--pixel);
+  font-size: 9px;
+}
+.chevron {
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  transition: transform 140ms ease;
+  flex-shrink: 0;
+}
+.chevron.up {
+  transform: rotate(180deg);
+}
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 240px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  z-index: 70;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+.account-dropdown.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.account-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px dashed var(--line-2);
+}
+.account-dropdown-header .account-avatar {
+  width: 34px;
+  height: 34px;
+}
+.account-dropdown-header .account-avatar-fallback {
+  font-size: 13px;
+}
+.account-dropdown-id {
+  min-width: 0;
+}
+.account-dropdown-name {
+  font-family: var(--pixel);
+  font-size: 10px;
+  color: var(--ink);
+  letter-spacing: 0.08em;
+}
+.account-dropdown-email {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-dropdown-signout {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--magenta);
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.account-dropdown-signout:hover:not(:disabled) {
+  background: rgba(var(--magenta-glow), 0.12);
+}
+.account-dropdown-signout:disabled {
+  color: var(--ink-faint);
+  cursor: default;
+}
+
 @media (max-width: 840px) {
   .av-nav {
     padding: 12px 16px;

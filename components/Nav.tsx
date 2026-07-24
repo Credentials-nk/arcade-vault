@@ -2,17 +2,29 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AuthUser } from '@/lib/auth';
 
 interface NavProps {
   user: AuthUser | null;
   isLoading: boolean;
-  onSignOut: () => void;
+  onSignOut: () => Promise<void> | void;
+}
+
+function Avatar({ user }: { user: AuthUser }) {
+  if (user.avatarUrl) {
+    return (
+      <img className="account-avatar" src={user.avatarUrl} alt="" referrerPolicy="no-referrer" />
+    );
+  }
+  return <span className="account-avatar account-avatar-fallback">{user.name.charAt(0)}</span>;
 }
 
 export default function Nav({ user, isLoading, onSignOut }: NavProps) {
   const [open, setOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -25,6 +37,41 @@ export default function Nav({ user, isLoading, onSignOut }: NavProps) {
   const go = (href: string) => {
     setOpen(false);
     router.push(href);
+  };
+
+  const [menuClosedForPathname, setMenuClosedForPathname] = useState(pathname);
+  if (pathname !== menuClosedForPathname) {
+    setMenuClosedForPathname(pathname);
+    if (accountMenuOpen) setAccountMenuOpen(false);
+  }
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
+      if (!accountMenuRef.current?.contains(e.target as Node)) setAccountMenuOpen(false);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAccountMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [accountMenuOpen]);
+
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await onSignOut();
+    } finally {
+      setIsSigningOut(false);
+      setAccountMenuOpen(false);
+    }
   };
 
   return (
@@ -61,9 +108,36 @@ export default function Nav({ user, isLoading, onSignOut }: NavProps) {
 
         {!isLoading &&
           (user ? (
-            <button className="btn ghost auth-btn" onClick={onSignOut}>
-              {user.name} ▾
-            </button>
+            <div className="account-menu" ref={accountMenuRef}>
+              <button
+                className="btn ghost auth-btn account-trigger"
+                onClick={() => setAccountMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={accountMenuOpen}
+              >
+                <Avatar user={user} />
+                {user.name}
+                <span className={'chevron' + (accountMenuOpen ? ' up' : '')} />
+              </button>
+
+              <div className={'account-dropdown' + (accountMenuOpen ? ' open' : '')} role="menu">
+                <div className="account-dropdown-header">
+                  <Avatar user={user} />
+                  <div className="account-dropdown-id">
+                    <div className="account-dropdown-name">{user.name}</div>
+                    {user.email && <div className="account-dropdown-email">{user.email}</div>}
+                  </div>
+                </div>
+                <button
+                  className="account-dropdown-signout"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                  role="menuitem"
+                >
+                  {isSigningOut ? 'CERRANDO…' : 'CERRAR SESIÓN'}
+                </button>
+              </div>
+            </div>
           ) : (
             <Link href="/auth" className="btn auth-btn">
               Iniciar Sesión
@@ -112,13 +186,25 @@ export default function Nav({ user, isLoading, onSignOut }: NavProps) {
         >
           Acerca de
         </a>
-        <a
-          className={isActive('/auth') ? 'active' : ''}
-          onClick={() => go('/auth')}
-          style={{ cursor: 'pointer' }}
-        >
-          {user ? 'Cuenta' : 'Iniciar Sesión'}
-        </a>
+        {user ? (
+          <a
+            onClick={() => {
+              setOpen(false);
+              handleSignOut();
+            }}
+            style={{ cursor: 'pointer' }}
+          >
+            {isSigningOut ? 'CERRANDO…' : `CERRAR SESIÓN (${user.name})`}
+          </a>
+        ) : (
+          <a
+            className={isActive('/auth') ? 'active' : ''}
+            onClick={() => go('/auth')}
+            style={{ cursor: 'pointer' }}
+          >
+            Iniciar Sesión
+          </a>
+        )}
         <div style={{ flex: 1 }} />
         <div
           className="pixel"
