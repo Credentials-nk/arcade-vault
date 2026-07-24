@@ -6,6 +6,7 @@ import SerpentinaGame from '@/components/games/serpentina/SerpentinaGame';
 import TouchPlayerShell from '@/components/games/TouchPlayerShell';
 import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
+import { useUser } from '@/hooks/useUser';
 import { SerpentinaEngine, SerpentinaCallbacks } from '@/lib/games/serpentina/game';
 import { saveScore } from '@/app/actions/saveScore';
 import { GAME_SKINS, SKINS, type SkinName } from '@/lib/skins';
@@ -14,6 +15,7 @@ export default function SerpentinaPage() {
   const router = useRouter();
   const engineRef = useRef<SerpentinaEngine | null>(null);
   const isTouch = useTouchDevice();
+  const { user } = useUser();
 
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState(1);
@@ -31,6 +33,13 @@ export default function SerpentinaPage() {
   useEffect(() => {
     engineRef.current?.setSkin(SKINS[displayMode]);
   }, [displayMode, gameKey]);
+
+  useEffect(() => {
+    // Precarga el nick de la cuenta si hay sesión (spec 12); sin sesión, el
+    // campo de nombre del modal de game-over queda vacío como antes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (user) setPlayerName(user.name);
+  }, [user]);
 
   const callbacks: SerpentinaCallbacks = {
     onScore: setScore,

@@ -6,6 +6,7 @@ import AsteroidsGame from '@/components/games/asteroids/AsteroidsGame';
 import TouchPlayerShell from '@/components/games/TouchPlayerShell';
 import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
+import { useUser } from '@/hooks/useUser';
 import { AsteroidsEngine, AsteroidsCallbacks } from '@/lib/games/asteroids/game';
 import { saveScore } from '@/app/actions/saveScore';
 import { GAME_SKINS, SKINS, type SkinName } from '@/lib/skins';
@@ -14,6 +15,7 @@ export default function AsteroidsPage() {
   const router = useRouter();
   const engineRef = useRef<AsteroidsEngine | null>(null);
   const isTouch = useTouchDevice();
+  const { user } = useUser();
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -35,6 +37,13 @@ export default function AsteroidsPage() {
   useEffect(() => {
     engineRef.current?.setSkin(SKINS[displayMode]);
   }, [displayMode, gameKey]);
+
+  useEffect(() => {
+    // Precarga el nick de la cuenta si hay sesión (spec 12); sin sesión, el
+    // campo de nombre del modal de game-over queda vacío como antes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (user) setPlayerName(user.name);
+  }, [user]);
 
   const callbacks: AsteroidsCallbacks = {
     onScore: setScore,

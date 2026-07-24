@@ -6,6 +6,7 @@ import FroggerGame from '@/components/games/frogger/FroggerGame';
 import TouchPlayerShell from '@/components/games/TouchPlayerShell';
 import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
+import { useUser } from '@/hooks/useUser';
 import { FroggerEngine, FroggerCallbacks } from '@/lib/games/frogger/game';
 import { saveScore } from '@/app/actions/saveScore';
 import { GAME_SKINS, SKINS, type SkinName } from '@/lib/skins';
@@ -16,6 +17,7 @@ export default function FroggerPage() {
   const router = useRouter();
   const engineRef = useRef<FroggerEngine | null>(null);
   const isTouch = useTouchDevice();
+  const { user } = useUser();
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -38,13 +40,19 @@ export default function FroggerPage() {
   }, [displayMode, gameKey]);
 
   useEffect(() => {
-    // Lectura única de localStorage al montar (no una suscripción a cambios
+    // Con sesión, prioriza el nick de la cuenta (spec 12); sin sesión, cae a la
+    // lectura única de localStorage al montar (no una suscripción a cambios
     // externos) — el caso que la regla no cubre bien; ver hooks/useTouchDevice
     // para el patrón useSyncExternalStore cuando sí hace falta sincronización continua.
+    if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPlayerName(user.name);
+      return;
+    }
     const stored = localStorage.getItem(NAME_KEY);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     if (stored) setPlayerName(stored);
-  }, []);
+  }, [user]);
 
   const callbacks: FroggerCallbacks = {
     onScore: setScore,

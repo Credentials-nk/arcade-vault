@@ -6,6 +6,7 @@ import BloqueBusterGame from '@/components/games/bloque-buster/BloqueBusterGame'
 import TouchPlayerShell, { DRAG_DECORATIVE_PAD } from '@/components/games/TouchPlayerShell';
 import SkinModeSelect from '@/components/games/SkinModeSelect';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
+import { useUser } from '@/hooks/useUser';
 import { ArkanoidEngine, ArkanoidCallbacks } from '@/lib/games/bloque-buster/game';
 import { saveScore } from '@/app/actions/saveScore';
 import { GAME_SKINS, SKINS, type SkinName } from '@/lib/skins';
@@ -14,6 +15,7 @@ export default function BloqueBusterPage() {
   const router = useRouter();
   const engineRef = useRef<ArkanoidEngine | null>(null);
   const isTouch = useTouchDevice();
+  const { user } = useUser();
 
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -33,6 +35,13 @@ export default function BloqueBusterPage() {
   useEffect(() => {
     engineRef.current?.setSkin(SKINS[displayMode]);
   }, [displayMode, gameKey]);
+
+  useEffect(() => {
+    // Precarga el nick de la cuenta si hay sesión (spec 12); sin sesión, el
+    // campo de nombre del modal de game-over queda vacío como antes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (user) setPlayerName(user.name);
+  }, [user]);
 
   const callbacks: ArkanoidCallbacks = {
     onScore: setScore,
