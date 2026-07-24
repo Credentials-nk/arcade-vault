@@ -2,13 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { useUser } from '@/hooks/useUser';
 import { createClient } from '@/lib/supabase/client';
 import { signInWithEmail, signUpWithEmail } from './actions';
 
 export default function AuthPage() {
   const router = useRouter();
-  const { signOut } = useUser();
   const [tab, setTab] = useState<'in' | 'up'>('in');
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
@@ -31,11 +29,6 @@ export default function AuthPage() {
       router.push('/');
       router.refresh();
     });
-  };
-
-  const asGuest = async () => {
-    await signOut();
-    router.push('/');
   };
 
   const withOAuth = (provider: 'google' | 'github') => {
@@ -119,10 +112,6 @@ export default function AuthPage() {
             {isPending ? '...' : tab === 'in' ? 'ENTRAR AL VAULT' : 'CREAR Y JUGAR'}
           </button>
         </form>
-
-        <button className="btn ghost" style={{ width: '100%', marginTop: 10 }} onClick={asGuest}>
-          JUGAR COMO INVITADO
-        </button>
 
         <div className="auth-divider">O CONTINÚA CON</div>
         <div className="social">

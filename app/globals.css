@@ -493,6 +493,24 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.account-dropdown-link {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--line-2);
+  font-family: var(--pixel);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--ink-dim);
+  text-align: left;
+  cursor: pointer;
+  transition: color 120ms;
+}
+.account-dropdown-link:hover {
+  color: var(--cyan);
+}
 .account-dropdown-signout {
   display: block;
   width: 100%;
@@ -3407,4 +3425,18 @@ a {
 }
 .term-body .caret {
   animation: blink 1s steps(1) infinite;
+}
+
+.account-page-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+}
+.account-page-profile .account-avatar {
+  width: 64px;
+  height: 64px;
+}
+.account-page-profile .account-avatar-fallback {
+  font-size: 22px;
 }
