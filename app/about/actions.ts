@@ -1,6 +1,6 @@
-"use server";
+'use server';
 
-import { Resend } from "resend";
+import { Resend } from 'resend';
 
 interface ContactPayload {
   name: string;
@@ -12,24 +12,34 @@ type ContactResult = { ok: true } | { ok: false; error: string };
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+/** Escapa metacaracteres HTML antes de interpolar texto de usuario en un `html:` de mail. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export async function sendContactEmail(payload: ContactPayload): Promise<ContactResult> {
   const { name, email, msg } = payload;
 
   if (!name.trim() || !email.trim() || !msg.trim()) {
-    return { ok: false, error: "Todos los campos son obligatorios." };
+    return { ok: false, error: 'Todos los campos son obligatorios.' };
   }
 
   try {
     const { error } = await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: "nikolas090189@gmail.com",
+      from: 'onboarding@resend.dev',
+      to: 'nikolas090189@gmail.com',
       subject: `[Arcade Vault] Mensaje de ${name}`,
       html: `
         <h2>Nuevo mensaje de contacto — Arcade Vault</h2>
-        <p><strong>Nombre:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Nombre:</strong> ${escapeHtml(name)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(email)}</p>
         <p><strong>Mensaje:</strong></p>
-        <p>${msg.replace(/\n/g, "<br/>")}</p>
+        <p>${escapeHtml(msg).replace(/\n/g, '<br/>')}</p>
       `,
     });
 
@@ -41,7 +51,7 @@ export async function sendContactEmail(payload: ContactPayload): Promise<Contact
   } catch (err) {
     return {
       ok: false,
-      error: err instanceof Error ? err.message : "Error inesperado al enviar el mensaje.",
+      error: err instanceof Error ? err.message : 'Error inesperado al enviar el mensaje.',
     };
   }
 }
