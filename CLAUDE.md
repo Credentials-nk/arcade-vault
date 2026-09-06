@@ -38,7 +38,9 @@ npm start        # Start production server
 npm run lint     # Run ESLint (no specific flags in config, use eslint <file> for targeted linting)
 ```
 
-The `supabase` MCP server is enabled for this project (`list_tables`, `execute_sql`, `list_migrations`, etc.) — prefer it over guessing schema when touching anything that reads/writes `games` or `scores`.
+The `supabase` MCP server is enabled for this project (`list_tables`, `execute_sql`, `list_migrations`, etc.) — prefer it over guessing schema when touching anything that reads/writes `games` or `scores`. It points at the **development** project only; production is never reachable from here (see "Environments" below).
+
+**Do not use `apply_migration` from the MCP.** Schema changes are written as a file in `supabase/migrations/` and applied with the Supabase CLI (`supabase db push`). `apply_migration` writes straight to the remote and leaves nothing in the repo — that's exactly the drift this setup exists to prevent.
 
 ## Project Structure
 
@@ -108,6 +110,14 @@ Two tables back the whole app (see `specs/04-supabase-setup.md`, `specs/06-leade
 - **`scores`** — one row per saved score (`game_id` FK → `games.id`, `player_name`, `score`, `created_at`). Written only through `saveScore(gameId, playerName, score)`.
 
 `getGameLeaderboard(gameId)` and `getGlobalLeaderboard()` in `app/actions/getLeaderboard.ts` are already generic across every `game_id` — **never re-implement per-game leaderboard logic**, new games get it for free.
+
+### Environments and migrations
+
+Two Supabase projects in the `NexoraDev` org: **`ArcadeVault-dev`** (`hnvjfqwpsjyscgtnjbhj`) — what `.env.local` and the MCP server point at — and **`ArcadeVault-prod`**, which is operated only with the CLI and deliberately has no MCP connection.
+
+`supabase/migrations/` is the **source of truth for the schema**, versioned in the repo. Every schema change — including a new row in `games` for a new game — is a migration file, applied with `supabase link` + `supabase db push` against whichever project you target. `supabase link` is persistent: check which project is linked before any push.
+
+Production also needs configuration that isn't code (OAuth providers, redirect URLs, password policy, rate limits). That checklist lives in `references/Security/prod-setup.md`.
 
 ## Game integration pattern
 
